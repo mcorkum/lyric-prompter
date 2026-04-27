@@ -60,15 +60,7 @@
     padding: 0 1.5rem;
   }
   #topbar.compact #song-title { font-size: 2rem; }
-  #topbar.compact #song-counter,
-  #topbar.compact #controls-hint { display: none; }
 
-  #song-counter {
-    font-family: 'DM Mono', monospace;
-    font-size: .75rem;
-    color: var(--text-dim);
-    min-width: 5rem;
-  }
   #song-title {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 6rem;
@@ -79,13 +71,6 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-  #controls-hint {
-    font-family: 'DM Mono', monospace;
-    font-size: .65rem;
-    color: var(--text-dim);
-    text-align: right;
-    min-width: 5rem;
   }
 
   /* ── Scroll indicator bar ── */
@@ -154,7 +139,6 @@
   #lyric-content.two-col {
     column-count: 2;
     column-gap: 5vw;
-    white-space: normal;
   }
 
   /* ── Auto-scroll glow when active ── */
@@ -469,9 +453,7 @@
 
 <!-- Top bar -->
 <div id="topbar">
-  <div id="song-counter">— / —</div>
   <div id="song-title">LYRIC PROMPTER</div>
-  <div id="controls-hint">? = Help · S = Songs · F = Fullscreen</div>
 </div>
 
 <!-- Main app -->
@@ -553,7 +535,6 @@ try { fontSizes = JSON.parse(localStorage.getItem('lyric-font-sizes') || '{}'); 
 const lyricScroll  = document.getElementById('lyric-scroll');
 const lyricContent = document.getElementById('lyric-content');
 const songTitle    = document.getElementById('song-title');
-const songCounter  = document.getElementById('song-counter');
 const progressBar  = document.getElementById('progress-bar');
 const scrollBadge  = document.getElementById('scroll-badge');
 const emptyState   = document.getElementById('empty-state');
@@ -610,7 +591,6 @@ async function loadSong(id) {
     const data = await r.json();
     currentId = id;
     songTitle.textContent = data.title.toUpperCase();
-    songCounter.textContent = `${id+1} / ${data.total}`;
     lyricContent.innerHTML = renderContent(data.content, data.ext);
     lyricScroll.scrollTop = 0;
     // Restore saved font size for this song (silently, no toast)
