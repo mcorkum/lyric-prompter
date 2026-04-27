@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lyric Prompter</title>
+<style>
+  /* ── Fonts ── */
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
+
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0a0a0c;
+    --surface:   #13131a;
+    --border:    #222230;
+    --accent:    #e8c842;
+    --accent2:   #4a9eff;
+    --text:      #f0ede6;
+    --text-dim:  #6b6880;
+    --text-mid:  #a09cb8;
+    --font-size: 2.2rem;
+    --scroll-speed: 60; /* px/s — controlled by JS */
+  }
+
+  html, body {
+    height: 100%; width: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    cursor: none;
+  }
+
+  /* ── Layout shells ── */
+  #app {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+  }
+
+  /* ── Top bar ── */
+  #topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 3.2rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    gap: 1rem;
+    transition: opacity .3s;
+  }
+  #topbar.hidden { opacity: 0; pointer-events: none; }
+
+  #song-counter {
+    font-family: 'DM Mono', monospace;
+    font-size: .75rem;
+    color: var(--text-dim);
+    min-width: 5rem;
+  }
+  #song-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: .08em;
+    color: var(--accent);
+    flex: 1;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #controls-hint {
+    font-family: 'DM Mono', monospace;
+    font-size: .65rem;
+    color: var(--text-dim);
+    text-align: right;
+    min-width: 5rem;
+  }
+
+  /* ── Scroll indicator bar ── */
+  #progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    width: 0%;
+    background: var(--accent);
+    z-index: 200;
+    transition: width .1s linear;
+  }
+
+  /* ── Main lyric stage ── */
+  #stage {
+    overflow: hidden;
+    position: relative;
+  }
+
+  #lyric-scroll {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
+    scroll-behavior: smooth;
+    padding: 3rem 4vw 40vh;
+  }
+  /* hide scrollbar */
+  #lyric-scroll::-webkit-scrollbar { display: none; }
+  #lyric-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+  #lyric-content {
+    font-family: 'DM Sans', sans-serif;
+    font-size: var(--font-size);
+    font-weight: 300;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-width: 100%;
+    color: var(--text);
+    transition: font-size .2s ease;
+  }
+
+  /* markdown-ish rendering */
+  #lyric-content h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2em; color: var(--accent); letter-spacing:.06em; font-weight:400; margin-bottom:.2em; }
+  #lyric-content h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.5em; color: var(--accent2); letter-spacing:.05em; font-weight:400; margin-bottom:.15em; }
+  #lyric-content h3 { font-size: 1.1em; color: var(--text-mid); font-weight:500; }
+  #lyric-content strong { color: var(--accent); font-weight: 500; }
+  #lyric-content em { color: var(--text-mid); font-style: italic; }
+  #lyric-content hr { border: none; border-top: 1px solid var(--border); margin: 1.5em 0; }
+  #lyric-content .section-label {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: .55em;
+    color: var(--text-dim);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: .1em .5em;
+    margin-bottom: .3em;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    vertical-align: middle;
+  }
+
+  /* ── Auto-scroll glow when active ── */
+  #stage.autoscrolling::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 18vh;
+    background: linear-gradient(to top, rgba(232,200,66,.07) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* ── Autoscroll pill ── */
+  #scroll-badge {
+    position: fixed;
+    bottom: 1.5rem; right: 1.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: .7rem;
+    color: var(--accent);
+    background: rgba(232,200,66,.1);
+    border: 1px solid rgba(232,200,66,.3);
+    border-radius: 999px;
+    padding: .35em 1em;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity .3s, transform .3s;
+    pointer-events: none;
+    z-index: 100;
+  }
+  #scroll-badge.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── Song list overlay ── */
+  #song-list-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: flex;
+    align-items: stretch;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s;
+  }
+  #song-list-overlay.visible { opacity: 1; pointer-events: all; }
+
+  #song-list-backdrop {
+    flex: 1;
+    background: rgba(0,0,0,.65);
+    backdrop-filter: blur(6px);
+  }
+
+  #song-list-panel {
+    width: min(420px, 90vw);
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #song-list-header {
+    padding: 1.4rem 1.6rem 1rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  #song-list-header h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: .08em;
+    color: var(--accent);
+    font-weight: 400;
+  }
+  #song-search {
+    margin-top: .8rem;
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .5rem .8rem;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: .8rem;
+    outline: none;
+  }
+  #song-search:focus { border-color: var(--accent2); }
+
+  #song-list-items {
+    overflow-y: auto;
+    flex: 1;
+    padding: .5rem 0;
+  }
+  .song-item {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    padding: .7rem 1.6rem;
+    cursor: pointer;
+    transition: background .15s;
+    border-left: 3px solid transparent;
+  }
+  .song-item:hover { background: rgba(255,255,255,.04); }
+  .song-item.active {
+    border-left-color: var(--accent);
+    background: rgba(232,200,66,.05);
+  }
+  .song-item-num {
+    font-family: 'DM Mono', monospace;
+    font-size: .65rem;
+    color: var(--text-dim);
+    min-width: 2rem;
+    text-align: right;
+  }
+  .song-item-title {
+    font-size: .9rem;
+    color: var(--text);
+    flex: 1;
+  }
+  .song-item-ext {
+    font-family: 'DM Mono', monospace;
+    font-size: .6rem;
+    color: var(--text-dim);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: .1em .4em;
+  }
+
+  /* ── Empty / loading states ── */
+  #empty-state {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 1rem;
+    color: var(--text-dim);
+  }
+  #empty-state.visible { display: flex; }
+  #empty-state .big-icon {
+    font-size: 5rem;
+    opacity: .2;
+  }
+  #empty-state h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: .06em;
+    color: var(--text-mid);
+  }
+  #empty-state p {
+    font-size: .9rem;
+    color: var(--text-dim);
+    text-align: center;
+    max-width: 28rem;
+  }
+  #empty-state code {
+    font-family: 'DM Mono', monospace;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: .1em .4em;
+    font-size: .85em;
+  }
+
+  /* ── Help overlay ── */
+  #help-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    background: rgba(0,0,0,.8);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s;
+  }
+  #help-overlay.visible { opacity: 1; pointer-events: all; }
+  #help-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2.5rem 3rem;
+    min-width: 28rem;
+  }
+  #help-box h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--accent);
+    letter-spacing: .08em;
+    font-weight: 400;
+    margin-bottom: 1.5rem;
+  }
+  .key-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: .7rem;
+  }
+  .key-row kbd {
+    font-family: 'DM Mono', monospace;
+    font-size: .75rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: .2em .6em;
+    color: var(--accent2);
+    min-width: 7rem;
+    text-align: center;
+    display: inline-block;
+  }
+  .key-row span {
+    font-size: .85rem;
+    color: var(--text-mid);
+  }
+
+  /* ── Status toast ── */
+  #toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: .5em 1.4em;
+    font-family: 'DM Mono', monospace;
+    font-size: .75rem;
+    color: var(--text-mid);
+    opacity: 0;
+    transition: opacity .2s, transform .2s;
+    pointer-events: none;
+    z-index: 500;
+    white-space: nowrap;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── Nav arrows (on-screen) ── */
+  .nav-arrow {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2rem;
+    color: var(--text-dim);
+    opacity: 0;
+    transition: opacity .3s;
+    z-index: 50;
+    pointer-events: none;
+    user-select: none;
+  }
+  .nav-arrow.left  { left:  .8rem; }
+  .nav-arrow.right { right: .8rem; }
+  body:hover .nav-arrow { opacity: .25; }
+
+  /* ── Brightness bar ── */
+  #brightness-bar {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(.94);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.4rem 2rem;
+    min-width: 18rem;
+    z-index: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s, transform .2s;
+    text-align: center;
+  }
+  #brightness-bar.visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  #bb-label {
+    font-family: 'DM Mono', monospace;
+    font-size: .7rem;
+    letter-spacing: .12em;
+    color: var(--text-dim);
+    margin-bottom: .9rem;
+  }
+  #bb-track {
+    height: 6px;
+    background: var(--bg);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: .7rem;
+  }
+  #bb-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 999px;
+    transition: width .15s ease;
+  }
+  #bb-pct {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--accent);
+    letter-spacing: .06em;
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<!-- Nav hints -->
+<div class="nav-arrow left">◀</div>
+<div class="nav-arrow right">▶</div>
+
+<!-- Top bar -->
+<div id="topbar">
+  <div id="song-counter">— / —</div>
+  <div id="song-title">LYRIC PROMPTER</div>
+  <div id="controls-hint">? = Help · S = Songs · F = Fullscreen</div>
+</div>
+
+<!-- Main app -->
+<div id="app" style="height:calc(100vh - 3.2rem); grid-template-rows:1fr;">
+  <div id="stage">
+    <!-- Empty state -->
+    <div id="empty-state">
+      <div class="big-icon">♪</div>
+      <h2>No Songs Found</h2>
+      <p>Plug in a USB stick with <code>.txt</code> or <code>.md</code> lyric files, then press <code>R</code> to refresh — or drop files in <code>~/Songs/</code> for testing.</p>
+    </div>
+
+    <!-- Lyric viewer -->
+    <div id="lyric-scroll">
+      <div id="lyric-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Autoscroll badge -->
+<div id="scroll-badge">⏩ AUTO-SCROLL</div>
+
+<!-- Song list overlay -->
+<div id="song-list-overlay">
+  <div id="song-list-backdrop" onclick="toggleSongList()"></div>
+  <div id="song-list-panel">
+    <div id="song-list-header">
+      <h2>Songs</h2>
+      <input id="song-search" type="text" placeholder="Filter songs…" oninput="filterSongs(this.value)" autocomplete="off" spellcheck="false">
+    </div>
+    <div id="song-list-items"></div>
+  </div>
+</div>
+
+<!-- Help overlay -->
+<div id="help-overlay" onclick="toggleHelp()">
+  <div id="help-box" onclick="event.stopPropagation()">
+    <h2>Keyboard Controls</h2>
+    <div class="key-row"><kbd>← / →</kbd><span>Previous / Next song</span></div>
+    <div class="key-row"><kbd>↑ / ↓</kbd><span>Scroll up / down</span></div>
+    <div class="key-row"><kbd>PgUp / PgDn</kbd><span>Scroll page up / down</span></div>
+    <div class="key-row"><kbd>Home / End</kbd><span>Jump to top / bottom</span></div>
+    <div class="key-row"><kbd>+ / =</kbd><span>Increase font size</span></div>
+    <div class="key-row"><kbd>-</kbd><span>Decrease font size</span></div>
+    <div class="key-row"><kbd>Space</kbd><span>Toggle auto-scroll</span></div>
+    <div class="key-row"><kbd>S</kbd><span>Toggle song list</span></div>
+    <div class="key-row"><kbd>F</kbd><span>Toggle fullscreen</span></div>
+    <div class="key-row"><kbd>R</kbd><span>Refresh song list (USB)</span></div>
+    <div class="key-row"><kbd>b / B</kbd><span>Screen brightness down / up</span></div>
+    <div class="key-row"><kbd>?</kbd><span>Toggle this help</span></div>
+    <div class="key-row"><kbd>Esc</kbd><span>Close overlays</span></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let songs       = [];
+let currentId   = 0;
+let fontSize    = 2.2;   // rem
+let autoScroll  = false;
+let scrollRAF   = null;
+let lastTime    = null;
+let scrollSpeed = 55;    // px/s
+let songListOpen = false;
+let helpOpen     = false;
+
+// ── DOM refs ───────────────────────────────────────────────────────────────
+const lyricScroll  = document.getElementById('lyric-scroll');
+const lyricContent = document.getElementById('lyric-content');
+const songTitle    = document.getElementById('song-title');
+const songCounter  = document.getElementById('song-counter');
+const progressBar  = document.getElementById('progress-bar');
+const scrollBadge  = document.getElementById('scroll-badge');
+const emptyState   = document.getElementById('empty-state');
+const stage        = document.getElementById('stage');
+const topbar       = document.getElementById('topbar');
+
+// ── Init ───────────────────────────────────────────────────────────────────
+async function init() {
+  await loadSongList();
+  if (songs.length > 0) loadSong(0);
+}
+
+// ── Song list ──────────────────────────────────────────────────────────────
+async function loadSongList() {
+  try {
+    const r = await fetch('/api/songs');
+    songs = await r.json();
+    renderSongListItems();
+
+    emptyState.classList.toggle('visible', songs.length === 0);
+    lyricScroll.style.display = songs.length === 0 ? 'none' : '';
+  } catch(e) {
+    showToast('⚠ Could not reach server');
+  }
+}
+
+function renderSongListItems(filter = '') {
+  const panel = document.getElementById('song-list-items');
+  panel.innerHTML = '';
+  const lf = filter.toLowerCase();
+  songs.forEach((s, i) => {
+    if (lf && !s.title.toLowerCase().includes(lf)) return;
+    const el = document.createElement('div');
+    el.className = 'song-item' + (i === currentId ? ' active' : '');
+    el.dataset.id = i;
+    el.innerHTML = `
+      <span class="song-item-num">${String(i+1).padStart(2,'0')}</span>
+      <span class="song-item-title">${escHtml(s.title)}</span>
+      <span class="song-item-ext">${s.ext}</span>`;
+    el.addEventListener('click', () => { loadSong(i); toggleSongList(); });
+    panel.appendChild(el);
+  });
+}
+
+function filterSongs(v) { renderSongListItems(v); }
+
+// ── Load song ──────────────────────────────────────────────────────────────
+async function loadSong(id) {
+  if (songs.length === 0) return;
+  id = Math.max(0, Math.min(songs.length - 1, id));
+  stopAutoScroll();
+  try {
+    const r = await fetch(`/api/song/${id}`);
+    const data = await r.json();
+    currentId = id;
+    songTitle.textContent = data.title.toUpperCase();
+    songCounter.textContent = `${id+1} / ${data.total}`;
+    lyricContent.innerHTML = renderContent(data.content, data.ext);
+    lyricScroll.scrollTop = 0;
+    updateProgress();
+    renderSongListItems(document.getElementById('song-search').value);
+  } catch(e) {
+    showToast('⚠ Error loading song');
+  }
+}
+
+function renderContent(raw, ext) {
+  if (ext === '.md') return renderMarkdown(raw);
+  // Plain text — escape and style [section labels] in brackets
+  return escHtml(raw).replace(/\[([^\]]+)\]/g, '<span class="section-label">$1</span>');
+}
+
+function renderMarkdown(md) {
+  // Minimal markdown renderer
+  let html = escHtml(md);
+  // Headings
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  // HR
+  html = html.replace(/^---+$/gm, '<hr>');
+  // Bold / italic
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  // [section labels]
+  html = html.replace(/\[([^\]]+)\]/g, '<span class="section-label">$1</span>');
+  return html;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Progress bar ───────────────────────────────────────────────────────────
+function updateProgress() {
+  const el = lyricScroll;
+  const pct = el.scrollHeight <= el.clientHeight ? 0
+    : (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100;
+  progressBar.style.width = pct + '%';
+}
+lyricScroll.addEventListener('scroll', updateProgress);
+
+// ── Font size ──────────────────────────────────────────────────────────────
+function changeFontSize(delta) {
+  fontSize = Math.max(0.8, Math.min(6, fontSize + delta));
+  lyricContent.style.fontSize = fontSize + 'rem';
+  showToast(`Text size: ${fontSize.toFixed(1)}rem`);
+}
+
+// ── Auto-scroll ────────────────────────────────────────────────────────────
+function toggleAutoScroll() {
+  autoScroll ? stopAutoScroll() : startAutoScroll();
+}
+
+function startAutoScroll() {
+  autoScroll = true;
+  lastTime = null;
+  scrollBadge.classList.add('visible');
+  stage.classList.add('autoscrolling');
+  scrollRAF = requestAnimationFrame(doScroll);
+}
+
+function stopAutoScroll() {
+  autoScroll = false;
+  scrollBadge.classList.remove('visible');
+  stage.classList.remove('autoscrolling');
+  if (scrollRAF) { cancelAnimationFrame(scrollRAF); scrollRAF = null; }
+}
+
+function doScroll(ts) {
+  if (!autoScroll) return;
+  if (!lastTime) lastTime = ts;
+  const dt = (ts - lastTime) / 1000;
+  lastTime = ts;
+  const el = lyricScroll;
+  el.scrollTop += scrollSpeed * dt;
+  updateProgress();
+  // Auto-stop at bottom
+  if (el.scrollTop >= el.scrollHeight - el.clientHeight - 2) {
+    stopAutoScroll();
+    showToast('End of song');
+  } else {
+    scrollRAF = requestAnimationFrame(doScroll);
+  }
+}
+
+// ── Song list overlay ──────────────────────────────────────────────────────
+function toggleSongList() {
+  songListOpen = !songListOpen;
+  document.getElementById('song-list-overlay').classList.toggle('visible', songListOpen);
+  if (songListOpen) {
+    document.getElementById('song-search').value = '';
+    renderSongListItems();
+    setTimeout(() => document.getElementById('song-search').focus(), 100);
+  }
+}
+
+// ── Help overlay ───────────────────────────────────────────────────────────
+function toggleHelp() {
+  helpOpen = !helpOpen;
+  document.getElementById('help-overlay').classList.toggle('visible', helpOpen);
+}
+
+// ── Fullscreen ─────────────────────────────────────────────────────────────
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(()=>{});
+  } else {
+    document.exitFullscreen().catch(()=>{});
+  }
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg, dur = 1800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// ── Keyboard ───────────────────────────────────────────────────────────────
+const SCROLL_STEP  = 120;  // px for up/down keys
+const PAGE_STEP    = 0.8;  // fraction of viewport
+
+document.addEventListener('keydown', (e) => {
+  // Don't capture keys when typing in search box
+  if (e.target === document.getElementById('song-search')) {
+    if (e.key === 'Escape') { document.getElementById('song-search').blur(); toggleSongList(); }
+    return;
+  }
+
+  // Close overlays with Escape
+  if (e.key === 'Escape') {
+    if (helpOpen)     { toggleHelp(); return; }
+    if (songListOpen) { toggleSongList(); return; }
+    stopAutoScroll();
+    return;
+  }
+
+  switch(e.key) {
+    case 'ArrowLeft':   e.preventDefault(); loadSong(currentId - 1); break;
+    case 'ArrowRight':  e.preventDefault(); loadSong(currentId + 1); break;
+
+    case 'ArrowUp':
+      e.preventDefault();
+      lyricScroll.scrollBy({ top: -SCROLL_STEP, behavior: 'smooth' });
+      break;
+    case 'ArrowDown':
+      e.preventDefault();
+      lyricScroll.scrollBy({ top:  SCROLL_STEP, behavior: 'smooth' });
+      break;
+    case 'PageUp':
+      e.preventDefault();
+      lyricScroll.scrollBy({ top: -lyricScroll.clientHeight * PAGE_STEP, behavior: 'smooth' });
+      break;
+    case 'PageDown':
+      e.preventDefault();
+      lyricScroll.scrollBy({ top:  lyricScroll.clientHeight * PAGE_STEP, behavior: 'smooth' });
+      break;
+    case 'Home':
+      e.preventDefault();
+      lyricScroll.scrollTo({ top: 0, behavior: 'smooth' });
+      break;
+    case 'End':
+      e.preventDefault();
+      lyricScroll.scrollTo({ top: lyricScroll.scrollHeight, behavior: 'smooth' });
+      break;
+
+    case '+':
+    case '=':  e.preventDefault(); changeFontSize(+0.2); break;
+    case '-':  e.preventDefault(); changeFontSize(-0.2); break;
+
+    case ' ':
+      e.preventDefault();
+      toggleAutoScroll();
+      break;
+
+    case 's': case 'S': toggleSongList();  break;
+    case 'f': case 'F': toggleFullscreen(); break;
+    case 'r': case 'R':
+      loadSongList().then(() => {
+        showToast(`↻ ${songs.length} song${songs.length !== 1 ? 's' : ''} found`);
+        if (songs.length > 0 && currentId >= songs.length) loadSong(songs.length - 1);
+      });
+      break;
+    case 'b': changeBrightness('down'); break;
+    case 'B': changeBrightness('up');   break;
+    case '?':  toggleHelp(); break;
+  }
+});
+
+// ── Brightness ─────────────────────────────────────────────────────────────
+async function changeBrightness(direction) {
+  try {
+    const r = await fetch(`/api/brightness/${direction}`);
+    const data = await r.json();
+    if (data.error) {
+      showToast(`⚠ ${data.error}`, 3500);
+    } else {
+      showBrightnessBar(data.percent);
+    }
+  } catch(e) {
+    showToast('⚠ Brightness unavailable');
+  }
+}
+
+// Brightness overlay bar
+let brightnessBarTimer = null;
+function showBrightnessBar(pct) {
+  let bar = document.getElementById('brightness-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'brightness-bar';
+    bar.innerHTML = `
+      <div id="bb-label">☀ BRIGHTNESS</div>
+      <div id="bb-track"><div id="bb-fill"></div></div>
+      <div id="bb-pct"></div>`;
+    document.body.appendChild(bar);
+  }
+  document.getElementById('bb-fill').style.width = pct + '%';
+  document.getElementById('bb-pct').textContent = pct + '%';
+  bar.classList.add('visible');
+  if (brightnessBarTimer) clearTimeout(brightnessBarTimer);
+  brightnessBarTimer = setTimeout(() => bar.classList.remove('visible'), 1800);
+}
+
+// ── Hide topbar in fullscreen ──────────────────────────────────────────────
+document.addEventListener('fullscreenchange', () => {
+  const fs = !!document.fullscreenElement;
+  topbar.classList.toggle('hidden', fs);
+  document.getElementById('app').style.height = fs ? '100vh' : 'calc(100vh - 3.2rem)';
+});
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

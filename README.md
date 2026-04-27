@@ -1,0 +1,131 @@
+# 🎵 Lyric Prompter — Raspberry Pi 5
+
+A fullscreen teleprompter for live performance lyrics. Reads `.txt` and `.md` files from a USB stick (or `~/Songs/`) and displays them beautifully in kiosk mode.
+
+---
+
+## Quick Install
+
+```bash
+# 1. Copy these files to your Pi, then:
+bash install.sh
+```
+
+Reboot and Chromium opens automatically in fullscreen kiosk mode.
+
+---
+
+## File Structure
+
+```
+lyric-prompter/
+├── server.py          ← Flask backend
+├── templates/
+│   └── index.html     ← Fullscreen UI
+├── install.sh         ← One-shot setup script
+└── README.md          ← This file
+```
+
+---
+
+## Keyboard Controls
+
+| Key | Action |
+|-----|--------|
+| `←` / `→` | Previous / Next song |
+| `↑` / `↓` | Scroll up / down |
+| `Page Up` / `Page Down` | Page scroll |
+| `Home` / `End` | Jump to top / bottom |
+| `+` / `=` | Bigger text |
+| `-` | Smaller text |
+| `Space` | Toggle auto-scroll |
+| `S` | Toggle song list sidebar |
+| `F` | Toggle fullscreen |
+| `R` | Refresh USB / song list |
+| `?` | Show key reference |
+| `Esc` | Close overlays / stop scroll |
+
+---
+
+## Lyric File Format
+
+### Plain Text (`.txt`)
+```
+[Verse 1]
+Your lyrics here
+One line per line
+
+[Chorus]
+Chorus lyrics
+```
+Square-bracket labels like `[Verse 1]` are highlighted automatically.
+
+### Markdown (`.md`)
+```markdown
+# Song Title
+
+## Chorus
+Your chorus lyrics
+
+## Verse 1
+Your verse here
+
+**Important word** for emphasis
+*Softer word* in italics
+```
+
+---
+
+## USB Stick Layout
+
+Just copy your lyric files anywhere on a FAT32 USB:
+
+```
+USB/
+├── 01 - Amazing Grace.txt
+├── 02 - Hallelujah.md
+├── Originals/
+│   └── My Song.txt
+└── Covers/
+    └── Bohemian Rhapsody.md
+```
+
+Songs are sorted alphabetically by filename. Plug in the USB — no config needed. Press `R` to refresh if you hot-plug mid-show.
+
+---
+
+## Manual Start (without rebooting)
+
+```bash
+# Start the server manually
+python3 ~/lyric-prompter/server.py &
+
+# Open kiosk (Wayland/Bookworm)
+chromium-browser --kiosk --ozone-platform=wayland http://localhost:5000
+
+# Open kiosk (X11/Bullseye)
+chromium-browser --kiosk http://localhost:5000
+```
+
+---
+
+## Auto-scroll Speed
+
+Auto-scroll defaults to 55 px/s — comfortable reading pace for most songs.  
+To change it, edit this line in `templates/index.html`:
+
+```js
+let scrollSpeed = 55;   // px/s — increase for faster, decrease for slower
+```
+
+---
+
+## Troubleshooting
+
+| Issue | Fix |
+|-------|-----|
+| No songs found | Press `R` to refresh; check USB is mounted under `/media/` |
+| Text too small | Press `+` to increase; or edit `--font-size: 2.2rem` in the CSS |
+| Cursor visible | `sudo apt install unclutter` and add `@unclutter -idle 0.5 -root` to LXDE autostart |
+| Kiosk doesn't launch | Check `systemctl status lyric-prompter` and the autostart file |
+| USB not detected | Run `lsblk` — Pi OS mounts USB under `/media/<username>/<label>` |
