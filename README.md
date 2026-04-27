@@ -40,12 +40,16 @@ lyric-prompter/
 | `-` | Smaller text |
 | `Space` | Jump down 75% of screen |
 | `Shift + Space` | Toggle auto-scroll |
+| `[` / `]` | Scroll speed down / up (live, while scrolling) |
+| `C` | Toggle two-column layout |
 | `S` | Toggle song list sidebar |
 | `F` | Toggle fullscreen |
-| `R` | Refresh USB / song list |
+| `R` | Force-refresh USB / song list |
 | `b` / `B` | Brightness down / up |
 | `?` | Show key reference |
 | `Esc` | Close overlays / stop scroll |
+
+See [CONTROLS.md](CONTROLS.md) for a printable one-page cheatsheet.
 
 ---
 
@@ -92,7 +96,7 @@ USB/
     └── Bohemian Rhapsody.md
 ```
 
-Songs are sorted alphabetically by filename. Plug in the USB — no config needed. Press `R` to refresh if you hot-plug mid-show.
+Songs are sorted alphabetically by filename. Plug in the USB — the song list refreshes automatically within a few seconds. Press `R` to force an immediate refresh.
 
 ---
 
@@ -113,8 +117,9 @@ chromium-browser --kiosk http://localhost:5000
 
 ## Auto-scroll Speed
 
-Auto-scroll defaults to 55 px/s — comfortable reading pace for most songs.  
-To change it, edit this line in `templates/index.html`:
+Auto-scroll defaults to 55 px/s. Adjust it **live** with `[` (slower) and `]` (faster) while the prompter is running — no need to edit code. The badge in the corner shows the current speed.
+
+To change the default, edit this line in `templates/index.html`:
 
 ```js
 let scrollSpeed = 55;   // px/s — increase for faster, decrease for slower
