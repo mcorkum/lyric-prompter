@@ -137,8 +137,15 @@
 
   /* ── Two-column layout ── */
   #lyric-content.two-col {
-    column-count: 2;
-    column-gap: 5vw;
+    display: flex;
+    gap: 5vw;
+    align-items: flex-start;
+    white-space: normal;
+  }
+  #lyric-content.two-col .two-col-pane {
+    flex: 1;
+    min-width: 0;
+    white-space: pre-wrap;
   }
 
   /* ── Auto-scroll glow when active ── */
@@ -523,10 +530,12 @@ let fontSize    = 4.4;   // rem
 let autoScroll  = false;
 let scrollRAF   = null;
 let lastTime    = null;
-let scrollSpeed = 55;    // px/s
+let scrollSpeed = 80;    // px/s
 let songListOpen = false;
 let helpOpen     = false;
 let twoCol       = false;
+let rawContent   = '';
+let rawExt       = '';
 
 // Font size memory keyed by song title, persisted in localStorage
 let fontSizes = {};
@@ -591,8 +600,10 @@ async function loadSong(id) {
     const r = await fetch(`/api/song/${id}`);
     const data = await r.json();
     currentId = id;
+    rawContent = data.content;
+    rawExt = data.ext;
     songTitle.textContent = data.title.toUpperCase();
-    lyricContent.innerHTML = renderContent(data.content, data.ext);
+    applyContent();
     lyricScroll.scrollTop = 0;
     // Restore saved font size for this song (silently, no toast)
     if (fontSizes[data.title] !== undefined) {
@@ -604,6 +615,23 @@ async function loadSong(id) {
   } catch(e) {
     showToast('⚠ Error loading song');
   }
+}
+
+function applyContent() {
+  if (!twoCol) {
+    lyricContent.classList.remove('two-col');
+    lyricContent.innerHTML = renderContent(rawContent, rawExt);
+    return;
+  }
+  // Split at paragraph breaks, divide into two halves, render side by side
+  const paras = rawContent.split(/\n{2,}/);
+  const mid = Math.ceil(paras.length / 2);
+  const left  = paras.slice(0, mid).join('\n\n');
+  const right = paras.slice(mid).join('\n\n');
+  lyricContent.classList.add('two-col');
+  lyricContent.innerHTML =
+    `<div class="two-col-pane">${renderContent(left, rawExt)}</div>` +
+    `<div class="two-col-pane">${renderContent(right, rawExt)}</div>`;
 }
 
 function renderContent(raw, ext) {
@@ -796,13 +824,13 @@ document.addEventListener('keydown', (e) => {
 
     case '[':
       e.preventDefault();
-      scrollSpeed = Math.max(5, scrollSpeed - 5);
+      scrollSpeed = Math.max(2, scrollSpeed - 2);
       if (autoScroll) updateScrollBadge();
       showToast(`⏩ Speed: ${scrollSpeed} px/s`);
       break;
     case ']':
       e.preventDefault();
-      scrollSpeed = Math.min(300, scrollSpeed + 5);
+      scrollSpeed = Math.min(300, scrollSpeed + 2);
       if (autoScroll) updateScrollBadge();
       showToast(`⏩ Speed: ${scrollSpeed} px/s`);
       break;
@@ -810,7 +838,7 @@ document.addEventListener('keydown', (e) => {
     case 'c': case 'C':
       e.preventDefault();
       twoCol = !twoCol;
-      lyricContent.classList.toggle('two-col', twoCol);
+      applyContent();
       showToast(twoCol ? '▦ Two-column' : '▤ Single column');
       break;
 
