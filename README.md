@@ -38,10 +38,12 @@ lyric-prompter/
 | `Home` / `End` | Jump to top / bottom |
 | `+` / `=` | Bigger text |
 | `-` | Smaller text |
-| `Space` | Toggle auto-scroll |
+| `Space` | Jump down 75% of screen |
+| `Shift + Space` | Toggle auto-scroll |
 | `S` | Toggle song list sidebar |
 | `F` | Toggle fullscreen |
 | `R` | Refresh USB / song list |
+| `b` / `B` | Brightness down / up |
 | `?` | Show key reference |
 | `Esc` | Close overlays / stop scroll |
 

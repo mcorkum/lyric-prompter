@@ -48,7 +48,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 2rem;
-    height: 3.2rem;
+    height: 8rem;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
@@ -65,7 +65,7 @@
   }
   #song-title {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.5rem;
+    font-size: 6rem;
     letter-spacing: .08em;
     color: var(--accent);
     flex: 1;
@@ -462,7 +462,7 @@
 </div>
 
 <!-- Main app -->
-<div id="app" style="height:calc(100vh - 3.2rem); grid-template-rows:1fr;">
+<div id="app" style="height:calc(100vh - 8rem); grid-template-rows:1fr;">
   <div id="stage">
     <!-- Empty state -->
     <div id="empty-state">
@@ -503,7 +503,8 @@
     <div class="key-row"><kbd>Home / End</kbd><span>Jump to top / bottom</span></div>
     <div class="key-row"><kbd>+ / =</kbd><span>Increase font size</span></div>
     <div class="key-row"><kbd>-</kbd><span>Decrease font size</span></div>
-    <div class="key-row"><kbd>Space</kbd><span>Toggle auto-scroll</span></div>
+    <div class="key-row"><kbd>Space</kbd><span>Jump down 75% of screen</span></div>
+    <div class="key-row"><kbd>Shift + Space</kbd><span>Toggle auto-scroll</span></div>
     <div class="key-row"><kbd>S</kbd><span>Toggle song list</span></div>
     <div class="key-row"><kbd>F</kbd><span>Toggle fullscreen</span></div>
     <div class="key-row"><kbd>R</kbd><span>Refresh song list (USB)</span></div>
@@ -637,7 +638,7 @@ lyricScroll.addEventListener('scroll', updateProgress);
 
 // ── Font size ──────────────────────────────────────────────────────────────
 function changeFontSize(delta) {
-  fontSize = Math.max(0.8, Math.min(6, fontSize + delta));
+  fontSize = Math.max(0.8, Math.min(30, fontSize + delta));
   lyricContent.style.fontSize = fontSize + 'rem';
   showToast(`Text size: ${fontSize.toFixed(1)}rem`);
 }
@@ -769,7 +770,11 @@ document.addEventListener('keydown', (e) => {
 
     case ' ':
       e.preventDefault();
-      toggleAutoScroll();
+      if (e.shiftKey) {
+        toggleAutoScroll();
+      } else {
+        lyricScroll.scrollBy({ top: lyricScroll.clientHeight * 0.75, behavior: 'smooth' });
+      }
       break;
 
     case 's': case 'S': toggleSongList();  break;
@@ -825,7 +830,7 @@ function showBrightnessBar(pct) {
 document.addEventListener('fullscreenchange', () => {
   const fs = !!document.fullscreenElement;
   topbar.classList.toggle('hidden', fs);
-  document.getElementById('app').style.height = fs ? '100vh' : 'calc(100vh - 3.2rem)';
+  document.getElementById('app').style.height = fs ? '100vh' : 'calc(100vh - 8rem)';
 });
 
 // ── Boot ───────────────────────────────────────────────────────────────────

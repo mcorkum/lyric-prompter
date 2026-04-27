@@ -7,7 +7,6 @@ set -e
 
 INSTALL_DIR="$HOME/lyric-prompter"
 SERVICE_NAME="lyric-prompter"
-KIOSK_SERVICE="lyric-prompter-kiosk"
 
 echo ""
 echo "╔══════════════════════════════════════╗"
@@ -18,7 +17,20 @@ echo ""
 # ── 1. Dependencies ──────────────────────────────────────────
 echo "▶ Installing system dependencies..."
 sudo apt-get update -qq
-sudo apt-get install -y python3-pip python3-flask chromium unclutter
+# Bookworm uses 'chromium', Bullseye uses 'chromium-browser'
+sudo apt-get install -y python3-pip python3-flask unclutter
+sudo apt-get install -y chromium 2>/dev/null || sudo apt-get install -y chromium-browser
+
+# Detect which binary is available
+if command -v chromium &>/dev/null; then
+  CHROMIUM_BIN="chromium"
+elif command -v chromium-browser &>/dev/null; then
+  CHROMIUM_BIN="chromium-browser"
+else
+  echo "   ⚠ Could not find Chromium — install it manually and re-run"
+  CHROMIUM_BIN="chromium"
+fi
+echo "   ✓ Using Chromium binary: $CHROMIUM_BIN"
 
 echo "▶ Installing Python dependencies..."
 pip3 install flask --break-system-packages 2>/dev/null || pip3 install flask
@@ -95,7 +107,6 @@ echo "   ✓ Flask server service enabled and started"
 # ── 5. Autostart Chromium kiosk on login ────────────────────
 echo "▶ Setting up Chromium kiosk autostart..."
 
-# Ensure autostart directory exists for LXDE/Wayfire/labwc
 AUTOSTART_LXDE="$HOME/.config/lxsession/LXDE-pi/autostart"
 AUTOSTART_WAYFIRE="$HOME/.config/wayfire.ini"
 
@@ -103,13 +114,12 @@ mkdir -p "$(dirname $AUTOSTART_LXDE)"
 
 # For Raspberry Pi OS Bookworm (Wayfire compositor)
 if [ -f "$AUTOSTART_WAYFIRE" ]; then
-  # Add kiosk to wayfire autostart
   mkdir -p "$HOME/.config/autostart"
   cat > "$HOME/.config/autostart/lyric-prompter-kiosk.desktop" << EOF
 [Desktop Entry]
 Type=Application
 Name=Lyric Prompter Kiosk
-Exec=bash -c 'sleep 5 && chromium-browser --kiosk --noerrdialogs --disable-infobars --no-first-run --ozone-platform=wayland http://localhost:5000'
+Exec=bash -c 'sleep 5 && $CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --no-first-run --ozone-platform=wayland http://localhost:5000'
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
@@ -119,16 +129,14 @@ fi
 
 # For Raspberry Pi OS Bullseye (LXDE)
 if [ -d "$(dirname $AUTOSTART_LXDE)" ]; then
-  # Overwrite/append kiosk line
-  grep -q "chromium-browser.*5000" "$AUTOSTART_LXDE" 2>/dev/null || \
-    echo "@chromium-browser --kiosk --noerrdialogs --disable-infobars --no-first-run http://localhost:5000" >> "$AUTOSTART_LXDE"
-  # Hide cursor
+  grep -q "localhost:5000" "$AUTOSTART_LXDE" 2>/dev/null || \
+    echo "@$CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --no-first-run http://localhost:5000" >> "$AUTOSTART_LXDE"
   grep -q "unclutter" "$AUTOSTART_LXDE" 2>/dev/null || \
     echo "@unclutter -idle 0.5 -root" >> "$AUTOSTART_LXDE"
   echo "   ✓ Added LXDE autostart entry"
 fi
 
-# ── 6. USB automount hook (optional udev rule) ───────────────
+# ── 6. USB automount hook ────────────────────────────────────
 echo "▶ Adding udev rule to notify on USB insert..."
 sudo tee /etc/udev/rules.d/99-lyric-usb.rules > /dev/null << 'EOF'
 # Trigger a song refresh in Lyric Prompter when USB storage is plugged in
@@ -145,7 +153,6 @@ sudo tee /etc/udev/rules.d/98-backlight.rules > /dev/null << 'EOF'
 SUBSYSTEM=="backlight", ACTION=="add", RUN+="/bin/chmod a+w /sys%p/brightness"
 EOF
 sudo udevadm control --reload-rules
-# Also apply right now without needing a reboot
 for f in /sys/class/backlight/*/brightness; do
   [ -f "$f" ] && sudo chmod a+w "$f" && echo "   ✓ Applied to $f"
 done
@@ -161,6 +168,6 @@ echo "║  • Drop .txt or .md lyrics in ~/Songs/ or USB        ║"
 echo "║  • Chromium will open in kiosk mode on next boot     ║"
 echo "║                                                      ║"
 echo "║  To test now (without rebooting):                    ║"
-echo "║    chromium-browser --kiosk http://localhost:5000    ║"
+echo "║    $CHROMIUM_BIN --kiosk http://localhost:5000       ║"
 echo "╚══════════════════════════════════════════════════════╝"
 echo ""
