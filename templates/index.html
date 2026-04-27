@@ -446,7 +446,7 @@
     <h2>Keyboard Controls</h2>
     <div class="key-row"><kbd>← / →</kbd><span>Previous / Next song</span></div>
     <div class="key-row"><kbd>↑ / ↓</kbd><span>Scroll up / down</span></div>
-    <div class="key-row"><kbd>PgUp / PgDn</kbd><span>Scroll page up / down</span></div>
+    <div class="key-row"><kbd>PgUp / PgDn</kbd><span>Top of song / jump down 75% (foot pedal)</span></div>
     <div class="key-row"><kbd>Home / End</kbd><span>Jump to top / bottom</span></div>
     <div class="key-row"><kbd>T / E</kbd><span>Jump to top / bottom (alternate)</span></div>
     <div class="key-row"><kbd>+ / =</kbd><span>Increase font size</span></div>
@@ -725,13 +725,13 @@ document.addEventListener('keydown', (e) => {
       e.preventDefault();
       lyricScroll.scrollBy({ top:  Math.round(lyricScroll.clientHeight * 0.15), behavior: 'smooth' });
       break;
-    case 'PageUp':
+    case 'PageUp':   // foot pedal: left → jump to top
       e.preventDefault();
-      lyricScroll.scrollBy({ top: -lyricScroll.clientHeight * PAGE_STEP, behavior: 'smooth' });
+      lyricScroll.scrollTo({ top: 0, behavior: 'smooth' });
       break;
-    case 'PageDown':
+    case 'PageDown': // foot pedal: right → jump down 75% (same as Space)
       e.preventDefault();
-      lyricScroll.scrollBy({ top:  lyricScroll.clientHeight * PAGE_STEP, behavior: 'smooth' });
+      lyricScroll.scrollBy({ top: lyricScroll.clientHeight * 0.75, behavior: 'smooth' });
       break;
     case 'Home':
     case 't': case 'T':

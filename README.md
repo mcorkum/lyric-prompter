@@ -126,6 +126,24 @@ let scrollSpeed = 55;   // px/s — increase for faster, decrease for slower
 
 ---
 
+## Bluetooth Foot Pedal (optional)
+
+Hands-free page control via a Donner BT pedal (or any HID page-turner that sends Page Up / Page Down).
+
+```bash
+bash setup-pedal.sh
+```
+
+Walks you through pairing and installs an auto-reconnect service so the pedal comes up on every boot. Set the pedal to **Page Up / Page Down** mode (button combo on the pedal — see the manufacturer's slip).
+
+Once paired:
+- **Left pedal** → jump to top of song
+- **Right pedal** → jump down 75% of screen (same as `Space`)
+
+All keyboard controls keep working alongside the pedal.
+
+---
+
 ## Troubleshooting
 
 | Issue | Fix |

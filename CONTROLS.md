@@ -10,8 +10,8 @@
 | `Right Arrow`    | Next song                       |
 | `Up Arrow`       | Scroll up ~15% of screen        |
 | `Down Arrow`     | Scroll down ~15% of screen      |
-| `Page Up`        | Scroll up one page              |
-| `Page Down`      | Scroll down one page            |
+| `Page Up`        | Jump to top (also: foot pedal L)|
+| `Page Down`      | Jump down 75% (also: foot pedal R)|
 | `Home`           | Jump to top of song             |
 | `End`            | Jump to bottom of song          |
 | `T`              | Jump to top (Home alternate)    |
@@ -62,6 +62,17 @@ USB is also detected automatically — the song list updates within a few second
 |------------------|---------------------------------|
 | `?`              | Show / hide this key reference  |
 | `Esc`            | Close any open overlay          |
+
+---
+
+## Foot pedal (optional)
+
+| Action            | Pedal              |
+|-------------------|--------------------|
+| Jump to top       | Left pedal         |
+| Jump down 75%     | Right pedal        |
+
+Pedal must be set to Page Up / Page Down mode. Run `setup-pedal.sh` to pair.
 
 ---
 
