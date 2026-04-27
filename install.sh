@@ -18,7 +18,7 @@ echo ""
 # ── 1. Dependencies ──────────────────────────────────────────
 echo "▶ Installing system dependencies..."
 sudo apt-get update -qq
-sudo apt-get install -y python3-pip python3-flask chromium-browser unclutter
+sudo apt-get install -y python3-pip python3-flask chromium unclutter
 
 echo "▶ Installing Python dependencies..."
 pip3 install flask --break-system-packages 2>/dev/null || pip3 install flask
