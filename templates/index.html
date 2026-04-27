@@ -135,18 +135,6 @@
     vertical-align: middle;
   }
 
-  /* ── Two-column layout ── */
-  #lyric-content.two-col {
-    display: flex;
-    gap: 5vw;
-    align-items: flex-start;
-    white-space: normal;
-  }
-  #lyric-content.two-col .two-col-pane {
-    flex: 1;
-    min-width: 0;
-    white-space: pre-wrap;
-  }
 
   /* ── Auto-scroll glow when active ── */
   #stage.autoscrolling::before {
@@ -509,7 +497,6 @@
     <div class="key-row"><kbd>Space</kbd><span>Jump down 75% of screen</span></div>
     <div class="key-row"><kbd>Shift + Space</kbd><span>Toggle auto-scroll</span></div>
     <div class="key-row"><kbd>[ / ]</kbd><span>Scroll speed down / up</span></div>
-    <div class="key-row"><kbd>C</kbd><span>Toggle two-column layout</span></div>
     <div class="key-row"><kbd>S</kbd><span>Toggle song list</span></div>
     <div class="key-row"><kbd>F</kbd><span>Toggle fullscreen</span></div>
     <div class="key-row"><kbd>R</kbd><span>Refresh song list (USB)</span></div>
@@ -533,7 +520,6 @@ let lastTime    = null;
 let scrollSpeed = 80;    // px/s
 let songListOpen = false;
 let helpOpen     = false;
-let twoCol       = false;
 let rawContent   = '';
 let rawExt       = '';
 
@@ -618,20 +604,7 @@ async function loadSong(id) {
 }
 
 function applyContent() {
-  if (!twoCol) {
-    lyricContent.classList.remove('two-col');
-    lyricContent.innerHTML = renderContent(rawContent, rawExt);
-    return;
-  }
-  // Split at paragraph breaks, divide into two halves, render side by side
-  const paras = rawContent.split(/\n{2,}/);
-  const mid = Math.ceil(paras.length / 2);
-  const left  = paras.slice(0, mid).join('\n\n');
-  const right = paras.slice(mid).join('\n\n');
-  lyricContent.classList.add('two-col');
-  lyricContent.innerHTML =
-    `<div class="two-col-pane">${renderContent(left, rawExt)}</div>` +
-    `<div class="two-col-pane">${renderContent(right, rawExt)}</div>`;
+  lyricContent.innerHTML = renderContent(rawContent, rawExt);
 }
 
 function renderContent(raw, ext) {
@@ -833,13 +806,6 @@ document.addEventListener('keydown', (e) => {
       scrollSpeed = Math.min(300, scrollSpeed + 2);
       if (autoScroll) updateScrollBadge();
       showToast(`⏩ Speed: ${scrollSpeed} px/s`);
-      break;
-
-    case 'c': case 'C':
-      e.preventDefault();
-      twoCol = !twoCol;
-      applyContent();
-      showToast(twoCol ? '▦ Two-column' : '▤ Single column');
       break;
 
     case 's': case 'S': toggleSongList();  break;

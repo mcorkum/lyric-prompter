@@ -29,7 +29,7 @@
 | `]`              | Speed up scroll speed           |
 | `Esc`            | Stop auto-scroll                |
 
-Default speed: 55 px/s. Range: 5 – 300 px/s. Current speed shown in badge while active.
+Default speed: 80 px/s. Range: 2 – 300 px/s. Current speed shown in badge while active.
 
 ---
 
@@ -39,7 +39,6 @@ Default speed: 55 px/s. Range: 5 – 300 px/s. Current speed shown in badge whil
 |------------------|---------------------------------|
 | `+` or `=`       | Increase font size              |
 | `-`              | Decrease font size              |
-| `C`              | Toggle two-column layout        |
 | `F`              | Toggle fullscreen               |
 | `b`              | Screen brightness down          |
 | `B`              | Screen brightness up            |

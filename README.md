@@ -42,7 +42,6 @@ lyric-prompter/
 | `Space` | Jump down 75% of screen |
 | `Shift + Space` | Toggle auto-scroll |
 | `[` / `]` | Scroll speed down / up (live, while scrolling) |
-| `C` | Toggle two-column layout |
 | `S` | Toggle song list sidebar |
 | `F` | Toggle fullscreen |
 | `R` | Force-refresh USB / song list |
