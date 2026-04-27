@@ -33,9 +33,10 @@ lyric-prompter/
 | Key | Action |
 |-----|--------|
 | `←` / `→` | Previous / Next song |
-| `↑` / `↓` | Scroll up / down |
+| `↑` / `↓` | Scroll up / down (~15% of screen) |
 | `Page Up` / `Page Down` | Page scroll |
 | `Home` / `End` | Jump to top / bottom |
+| `T` / `E` | Jump to top / bottom (K400-friendly alternate) |
 | `+` / `=` | Bigger text |
 | `-` | Smaller text |
 | `Space` | Jump down 75% of screen |

@@ -20,7 +20,7 @@
     --text:      #f0ede6;
     --text-dim:  #6b6880;
     --text-mid:  #a09cb8;
-    --font-size: 2.2rem;
+    --font-size: 4.4rem;
     --scroll-speed: 60; /* px/s — controlled by JS */
   }
 
@@ -496,6 +496,7 @@
     <div class="key-row"><kbd>↑ / ↓</kbd><span>Scroll up / down</span></div>
     <div class="key-row"><kbd>PgUp / PgDn</kbd><span>Scroll page up / down</span></div>
     <div class="key-row"><kbd>Home / End</kbd><span>Jump to top / bottom</span></div>
+    <div class="key-row"><kbd>T / E</kbd><span>Jump to top / bottom (alternate)</span></div>
     <div class="key-row"><kbd>+ / =</kbd><span>Increase font size</span></div>
     <div class="key-row"><kbd>-</kbd><span>Decrease font size</span></div>
     <div class="key-row"><kbd>Space</kbd><span>Jump down 75% of screen</span></div>
@@ -518,7 +519,7 @@
 // ── State ──────────────────────────────────────────────────────────────────
 let songs       = [];
 let currentId   = 0;
-let fontSize    = 2.2;   // rem
+let fontSize    = 4.4;   // rem
 let autoScroll  = false;
 let scrollRAF   = null;
 let lastTime    = null;
@@ -732,7 +733,6 @@ function showToast(msg, dur = 1800) {
 }
 
 // ── Keyboard ───────────────────────────────────────────────────────────────
-const SCROLL_STEP  = 120;  // px for up/down keys
 const PAGE_STEP    = 0.8;  // fraction of viewport
 
 document.addEventListener('keydown', (e) => {
@@ -756,11 +756,11 @@ document.addEventListener('keydown', (e) => {
 
     case 'ArrowUp':
       e.preventDefault();
-      lyricScroll.scrollBy({ top: -SCROLL_STEP, behavior: 'smooth' });
+      lyricScroll.scrollBy({ top: -Math.round(lyricScroll.clientHeight * 0.15), behavior: 'smooth' });
       break;
     case 'ArrowDown':
       e.preventDefault();
-      lyricScroll.scrollBy({ top:  SCROLL_STEP, behavior: 'smooth' });
+      lyricScroll.scrollBy({ top:  Math.round(lyricScroll.clientHeight * 0.15), behavior: 'smooth' });
       break;
     case 'PageUp':
       e.preventDefault();
@@ -771,10 +771,12 @@ document.addEventListener('keydown', (e) => {
       lyricScroll.scrollBy({ top:  lyricScroll.clientHeight * PAGE_STEP, behavior: 'smooth' });
       break;
     case 'Home':
+    case 't': case 'T':
       e.preventDefault();
       lyricScroll.scrollTo({ top: 0, behavior: 'smooth' });
       break;
     case 'End':
+    case 'e': case 'E':
       e.preventDefault();
       lyricScroll.scrollTo({ top: lyricScroll.scrollHeight, behavior: 'smooth' });
       break;

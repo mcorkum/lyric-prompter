@@ -8,12 +8,14 @@
 |------------------|---------------------------------|
 | `Left Arrow`     | Previous song                   |
 | `Right Arrow`    | Next song                       |
-| `Up Arrow`       | Scroll up 120 px                |
-| `Down Arrow`     | Scroll down 120 px              |
+| `Up Arrow`       | Scroll up ~15% of screen        |
+| `Down Arrow`     | Scroll down ~15% of screen      |
 | `Page Up`        | Scroll up one page              |
 | `Page Down`      | Scroll down one page            |
 | `Home`           | Jump to top of song             |
 | `End`            | Jump to bottom of song          |
+| `T`              | Jump to top (Home alternate)    |
+| `E`              | Jump to bottom (End alternate)  |
 | `Space`          | Jump down 75% of screen         |
 
 ---
