@@ -71,7 +71,8 @@ Scroll up and down with arrow keys
 Or let it auto-scroll so far
 
 [Outro]
-Press Space to start auto-scroll
+Press Space to jump down the screen
+Shift+Space to auto-scroll along
 Press R to reload from USB
 Press ? for the full key guide
 Enjoy your gig — play free!
@@ -108,33 +109,27 @@ echo "   ✓ Flask server service enabled and started"
 echo "▶ Setting up Chromium kiosk autostart..."
 
 AUTOSTART_LXDE="$HOME/.config/lxsession/LXDE-pi/autostart"
-AUTOSTART_WAYFIRE="$HOME/.config/wayfire.ini"
 
-mkdir -p "$(dirname $AUTOSTART_LXDE)"
-
-# For Raspberry Pi OS Bookworm (Wayfire compositor)
-if [ -f "$AUTOSTART_WAYFIRE" ]; then
-  mkdir -p "$HOME/.config/autostart"
-  cat > "$HOME/.config/autostart/lyric-prompter-kiosk.desktop" << EOF
+# Always write a .desktop file — works across LXDE, Wayfire, and Bookworm
+mkdir -p "$HOME/.config/autostart"
+cat > "$HOME/.config/autostart/lyric-prompter.desktop" << EOF
 [Desktop Entry]
 Type=Application
-Name=Lyric Prompter Kiosk
-Exec=bash -c 'sleep 8 && $CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --no-first-run --ozone-platform=wayland http://localhost:5000'
+Name=Lyric Prompter
+Exec=bash -c 'sleep 8 && $CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --no-first-run http://localhost:5000'
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
 EOF
-  echo "   ✓ Created Wayfire autostart entry"
-fi
+echo "   ✓ Created .desktop autostart entry"
 
-# For Raspberry Pi OS Bullseye (LXDE)
-if [ -d "$(dirname $AUTOSTART_LXDE)" ]; then
-  grep -q "localhost:5000" "$AUTOSTART_LXDE" 2>/dev/null || \
-    echo "@bash -c \"sleep 8 && $CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --no-first-run http://localhost:5000\"" >> "$AUTOSTART_LXDE"
-  grep -q "unclutter" "$AUTOSTART_LXDE" 2>/dev/null || \
-    echo "@unclutter -idle 0.5 -root" >> "$AUTOSTART_LXDE"
-  echo "   ✓ Added LXDE autostart entry"
-fi
+# Also write LXDE autostart as a fallback
+mkdir -p "$(dirname $AUTOSTART_LXDE)"
+grep -q "localhost:5000" "$AUTOSTART_LXDE" 2>/dev/null || \
+  echo "@bash -c \"sleep 8 && $CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --no-first-run http://localhost:5000\"" >> "$AUTOSTART_LXDE"
+grep -q "unclutter" "$AUTOSTART_LXDE" 2>/dev/null || \
+  echo "@unclutter -idle 0.5 -root" >> "$AUTOSTART_LXDE"
+echo "   ✓ Added LXDE autostart entry (fallback)"
 
 # ── 6. USB automount hook ────────────────────────────────────
 echo "▶ Adding udev rule to notify on USB insert..."
