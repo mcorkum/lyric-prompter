@@ -501,6 +501,7 @@
     <div class="key-row"><kbd>F</kbd><span>Toggle fullscreen</span></div>
     <div class="key-row"><kbd>R</kbd><span>Refresh song list (USB)</span></div>
     <div class="key-row"><kbd>b / B</kbd><span>Screen brightness down / up</span></div>
+    <div class="key-row"><kbd>O</kbd><span>Toggle portrait / landscape</span></div>
     <div class="key-row"><kbd>?</kbd><span>Toggle this help</span></div>
     <div class="key-row"><kbd>Esc</kbd><span>Close overlays</span></div>
   </div>
@@ -818,9 +819,25 @@ document.addEventListener('keydown', (e) => {
       break;
     case 'b': changeBrightness('down'); break;
     case 'B': changeBrightness('up');   break;
+    case 'o': case 'O': rotateDisplay(); break;
     case '?':  toggleHelp(); break;
   }
 });
+
+// ── Display rotation ───────────────────────────────────────────────────────
+async function rotateDisplay() {
+  try {
+    const r = await fetch('/api/rotate', { method: 'POST' });
+    const data = await r.json();
+    if (data.error) {
+      showToast(`⚠ ${data.error}`, 3500);
+    } else {
+      showToast(`⟳ ${data.orientation === 'portrait' ? 'Portrait' : 'Landscape'}`);
+    }
+  } catch(e) {
+    showToast('⚠ Rotation unavailable');
+  }
+}
 
 // ── Brightness ─────────────────────────────────────────────────────────────
 async function changeBrightness(direction) {

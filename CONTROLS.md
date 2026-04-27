@@ -42,6 +42,7 @@ Default speed: 80 px/s. Range: 2 – 300 px/s. Current speed shown in badge whil
 | `F`              | Toggle fullscreen               |
 | `b`              | Screen brightness down          |
 | `B`              | Screen brightness up            |
+| `O`              | Toggle portrait / landscape     |
 
 Font size is remembered per song and restored automatically next visit.
 

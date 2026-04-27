@@ -7,6 +7,7 @@ Scans USB sticks for .txt/.md lyric files and serves them via a local web UI.
 import os
 import re
 import glob
+import subprocess
 import threading
 from pathlib import Path
 from flask import Flask, jsonify, render_template, send_from_directory
@@ -187,6 +188,81 @@ def api_brightness_change(direction):
         return jsonify({"error": result}), 500
     pct = round(result / BRIGHTNESS_MAX * 100)
     return jsonify({"value": result, "percent": pct, "max": BRIGHTNESS_MAX})
+
+
+# ── Display rotation ──────────────────────────────────────────────────────────
+
+_orientation = "landscape"  # runtime state; resets on server restart
+
+def _run(cmd, env):
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=6, env=env)
+        return r.returncode == 0, r.stderr.strip()
+    except FileNotFoundError:
+        return False, f"{cmd[0]} not found"
+    except Exception as e:
+        return False, str(e)
+
+def _xrandr_outputs():
+    env = {**os.environ, "DISPLAY": ":0"}
+    try:
+        r = subprocess.run(["xrandr"], capture_output=True, text=True, timeout=5, env=env)
+        return [l.split()[0] for l in r.stdout.splitlines() if " connected" in l]
+    except Exception:
+        return []
+
+def _wlrandr_outputs():
+    uid = os.getuid()
+    for wd in ("wayland-0", "wayland-1"):
+        env = {**os.environ, "WAYLAND_DISPLAY": wd, "XDG_RUNTIME_DIR": f"/run/user/{uid}"}
+        try:
+            r = subprocess.run(["wlr-randr"], capture_output=True, text=True, timeout=5, env=env)
+            if r.returncode == 0:
+                outputs = [l.split()[0] for l in r.stdout.splitlines()
+                           if l and not l[0].isspace()]
+                return outputs, env
+        except Exception:
+            pass
+    return [], {}
+
+def rotate_display(orientation):
+    """Rotate the connected display. Returns (ok, message)."""
+    # wlr-randr (Wayland / Bookworm)
+    outputs, wl_env = _wlrandr_outputs()
+    if outputs:
+        transform = "normal" if orientation == "landscape" else "90"
+        for out in outputs:
+            ok, msg = _run(["wlr-randr", "--output", out, "--transform", transform], wl_env)
+            if ok:
+                return True, orientation
+        return False, f"wlr-randr failed: {msg}"
+
+    # xrandr (X11 / Bullseye)
+    outputs = _xrandr_outputs()
+    if outputs:
+        rotate = "normal" if orientation == "landscape" else "left"
+        env = {**os.environ, "DISPLAY": ":0"}
+        for out in outputs:
+            ok, msg = _run(["xrandr", "--output", out, "--rotate", rotate], env)
+            if ok:
+                return True, orientation
+        return False, f"xrandr failed: {msg}"
+
+    return False, "No display outputs detected (is xrandr or wlr-randr installed?)"
+
+@app.route("/api/rotate", methods=["POST"])
+def api_rotate():
+    global _orientation
+    target = "portrait" if _orientation == "landscape" else "landscape"
+    ok, result = rotate_display(target)
+    if ok:
+        _orientation = target
+        return jsonify({"orientation": _orientation})
+    return jsonify({"error": result}), 500
+
+@app.route("/api/orientation")
+def api_orientation():
+    return jsonify({"orientation": _orientation})
 
 
 if __name__ == "__main__":
