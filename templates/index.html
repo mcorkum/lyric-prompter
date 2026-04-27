@@ -33,18 +33,6 @@
     cursor: none;
   }
 
-  /* ── Portrait rotation ── */
-  body.portrait {
-    width: 100vh;
-    height: 100vw;
-    overflow: hidden;
-    transform: rotate(-90deg) translateX(-100vw);
-    transform-origin: top left;
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-
   /* ── Layout shells ── */
   #app {
     display: grid;
@@ -469,7 +457,6 @@
     <div class="key-row"><kbd>S</kbd><span>Toggle song list</span></div>
     <div class="key-row"><kbd>F</kbd><span>Toggle fullscreen</span></div>
     <div class="key-row"><kbd>R</kbd><span>Refresh song list (USB)</span></div>
-    <div class="key-row"><kbd>O</kbd><span>Toggle portrait / landscape</span></div>
     <div class="key-row"><kbd>?</kbd><span>Toggle this help</span></div>
     <div class="key-row"><kbd>Esc</kbd><span>Close overlays</span></div>
   </div>
@@ -508,7 +495,6 @@ const topbar       = document.getElementById('topbar');
 
 // ── Init ───────────────────────────────────────────────────────────────────
 async function init() {
-  applyPortrait();
   await loadSongList();
   if (songs.length > 0) loadSong(0);
 }
@@ -792,25 +778,10 @@ document.addEventListener('keydown', (e) => {
         if (songs.length > 0 && currentId >= songs.length) loadSong(songs.length - 1);
       });
       break;
-    case 'o': case 'O': rotateDisplay(); break;
     case '?':  toggleHelp(); break;
   }
 });
 
-// ── Display rotation (CSS) ─────────────────────────────────────────────────
-let portrait = false;
-try { portrait = localStorage.getItem('lyric-portrait') === '1'; } catch(e) {}
-
-function applyPortrait() {
-  document.body.classList.toggle('portrait', portrait);
-}
-
-function rotateDisplay() {
-  portrait = !portrait;
-  applyPortrait();
-  showToast(portrait ? '⟳ Portrait' : '⟳ Landscape');
-  try { localStorage.setItem('lyric-portrait', portrait ? '1' : '0'); } catch(e) {}
-}
 
 // ── Hide topbar in fullscreen ──────────────────────────────────────────────
 document.addEventListener('fullscreenchange', () => {
