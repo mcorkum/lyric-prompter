@@ -119,7 +119,7 @@ if [ -f "$AUTOSTART_WAYFIRE" ]; then
 [Desktop Entry]
 Type=Application
 Name=Lyric Prompter Kiosk
-Exec=bash -c 'sleep 5 && $CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --no-first-run --ozone-platform=wayland http://localhost:5000'
+Exec=bash -c 'sleep 8 && $CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --no-first-run --ozone-platform=wayland http://localhost:5000'
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
@@ -130,7 +130,7 @@ fi
 # For Raspberry Pi OS Bullseye (LXDE)
 if [ -d "$(dirname $AUTOSTART_LXDE)" ]; then
   grep -q "localhost:5000" "$AUTOSTART_LXDE" 2>/dev/null || \
-    echo "@$CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --no-first-run http://localhost:5000" >> "$AUTOSTART_LXDE"
+    echo "@bash -c \"sleep 8 && $CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --no-first-run http://localhost:5000\"" >> "$AUTOSTART_LXDE"
   grep -q "unclutter" "$AUTOSTART_LXDE" 2>/dev/null || \
     echo "@unclutter -idle 0.5 -root" >> "$AUTOSTART_LXDE"
   echo "   ✓ Added LXDE autostart entry"
