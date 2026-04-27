@@ -55,7 +55,13 @@
     gap: 1rem;
     transition: opacity .3s;
   }
-  #topbar.hidden { opacity: 0; pointer-events: none; }
+  #topbar.compact {
+    height: 3rem;
+    padding: 0 1.5rem;
+  }
+  #topbar.compact #song-title { font-size: 2rem; }
+  #topbar.compact #song-counter,
+  #topbar.compact #controls-hint { display: none; }
 
   #song-counter {
     font-family: 'DM Mono', monospace;
@@ -142,6 +148,13 @@
     letter-spacing: .1em;
     text-transform: uppercase;
     vertical-align: middle;
+  }
+
+  /* ── Two-column layout ── */
+  #lyric-content.two-col {
+    column-count: 2;
+    column-gap: 5vw;
+    white-space: normal;
   }
 
   /* ── Auto-scroll glow when active ── */
@@ -505,6 +518,8 @@
     <div class="key-row"><kbd>-</kbd><span>Decrease font size</span></div>
     <div class="key-row"><kbd>Space</kbd><span>Jump down 75% of screen</span></div>
     <div class="key-row"><kbd>Shift + Space</kbd><span>Toggle auto-scroll</span></div>
+    <div class="key-row"><kbd>[ / ]</kbd><span>Scroll speed down / up</span></div>
+    <div class="key-row"><kbd>C</kbd><span>Toggle two-column layout</span></div>
     <div class="key-row"><kbd>S</kbd><span>Toggle song list</span></div>
     <div class="key-row"><kbd>F</kbd><span>Toggle fullscreen</span></div>
     <div class="key-row"><kbd>R</kbd><span>Refresh song list (USB)</span></div>
@@ -528,6 +543,11 @@ let lastTime    = null;
 let scrollSpeed = 55;    // px/s
 let songListOpen = false;
 let helpOpen     = false;
+let twoCol       = false;
+
+// Font size memory keyed by song title, persisted in localStorage
+let fontSizes = {};
+try { fontSizes = JSON.parse(localStorage.getItem('lyric-font-sizes') || '{}'); } catch(e) {}
 
 // ── DOM refs ───────────────────────────────────────────────────────────────
 const lyricScroll  = document.getElementById('lyric-scroll');
@@ -593,6 +613,11 @@ async function loadSong(id) {
     songCounter.textContent = `${id+1} / ${data.total}`;
     lyricContent.innerHTML = renderContent(data.content, data.ext);
     lyricScroll.scrollTop = 0;
+    // Restore saved font size for this song (silently, no toast)
+    if (fontSizes[data.title] !== undefined) {
+      fontSize = fontSizes[data.title];
+      lyricContent.style.fontSize = fontSize + 'rem';
+    }
     updateProgress();
     renderSongListItems(document.getElementById('song-search').value);
   } catch(e) {
@@ -641,6 +666,11 @@ function changeFontSize(delta) {
   fontSize = Math.max(0.8, Math.min(30, fontSize + delta));
   lyricContent.style.fontSize = fontSize + 'rem';
   showToast(`Text size: ${fontSize.toFixed(1)}rem`);
+  // Save size for current song
+  if (songs[currentId]) {
+    fontSizes[songs[currentId].title] = fontSize;
+    try { localStorage.setItem('lyric-font-sizes', JSON.stringify(fontSizes)); } catch(e) {}
+  }
 }
 
 // ── Auto-scroll ────────────────────────────────────────────────────────────
@@ -648,9 +678,14 @@ function toggleAutoScroll() {
   autoScroll ? stopAutoScroll() : startAutoScroll();
 }
 
+function updateScrollBadge() {
+  scrollBadge.textContent = `⏩ AUTO-SCROLL  ${scrollSpeed}px/s`;
+}
+
 function startAutoScroll() {
   autoScroll = true;
   lastTime = null;
+  updateScrollBadge();
   scrollBadge.classList.add('visible');
   stage.classList.add('autoscrolling');
   scrollRAF = requestAnimationFrame(doScroll);
@@ -777,6 +812,26 @@ document.addEventListener('keydown', (e) => {
       }
       break;
 
+    case '[':
+      e.preventDefault();
+      scrollSpeed = Math.max(5, scrollSpeed - 5);
+      if (autoScroll) updateScrollBadge();
+      showToast(`⏩ Speed: ${scrollSpeed} px/s`);
+      break;
+    case ']':
+      e.preventDefault();
+      scrollSpeed = Math.min(300, scrollSpeed + 5);
+      if (autoScroll) updateScrollBadge();
+      showToast(`⏩ Speed: ${scrollSpeed} px/s`);
+      break;
+
+    case 'c': case 'C':
+      e.preventDefault();
+      twoCol = !twoCol;
+      lyricContent.classList.toggle('two-col', twoCol);
+      showToast(twoCol ? '▦ Two-column' : '▤ Single column');
+      break;
+
     case 's': case 'S': toggleSongList();  break;
     case 'f': case 'F': toggleFullscreen(); break;
     case 'r': case 'R':
@@ -829,12 +884,36 @@ function showBrightnessBar(pct) {
 // ── Hide topbar in fullscreen ──────────────────────────────────────────────
 document.addEventListener('fullscreenchange', () => {
   const fs = !!document.fullscreenElement;
-  topbar.classList.toggle('hidden', fs);
-  document.getElementById('app').style.height = fs ? '100vh' : 'calc(100vh - 8rem)';
+  topbar.classList.toggle('compact', fs);
+  document.getElementById('app').style.height = fs ? 'calc(100vh - 3rem)' : 'calc(100vh - 8rem)';
 });
 
+// ── USB hot-plug polling ───────────────────────────────────────────────────
+let usbPollSnapshot = '';
+
+function songListSnapshot(list) {
+  return list.length + '|' + (list[0]?.title || '') + '|' + (list[list.length-1]?.title || '');
+}
+
+setInterval(async () => {
+  try {
+    const r = await fetch('/api/songs');
+    const list = await r.json();
+    const snap = songListSnapshot(list);
+    if (usbPollSnapshot && snap !== usbPollSnapshot) {
+      await loadSongList();
+      showToast(`↻ USB updated — ${songs.length} song${songs.length !== 1 ? 's' : ''}`);
+    }
+    usbPollSnapshot = snap;
+  } catch(e) { /* server briefly restarting on USB insert — retry next tick */ }
+}, 6000);
+
 // ── Boot ───────────────────────────────────────────────────────────────────
-init();
+async function boot() {
+  await init();
+  usbPollSnapshot = songListSnapshot(songs);
+}
+boot();
 </script>
 </body>
 </html>
