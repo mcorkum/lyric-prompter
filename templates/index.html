@@ -33,6 +33,18 @@
     cursor: none;
   }
 
+  /* ── Portrait rotation ── */
+  body.portrait {
+    width: 100vh;
+    height: 100vw;
+    overflow: hidden;
+    transform: rotate(-90deg) translateX(-100vw);
+    transform-origin: top left;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
   /* ── Layout shells ── */
   #app {
     display: grid;
@@ -110,8 +122,11 @@
     word-break: break-word;
     max-width: 100%;
     color: var(--text);
-    transition: font-size .2s ease;
+    transition: font-size .2s ease, opacity .25s ease;
   }
+  #song-title { transition: opacity .25s ease; }
+  body.song-fading #lyric-content,
+  body.song-fading #song-title { opacity: 0; }
 
   /* markdown-ish rendering */
   #lyric-content h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2em; color: var(--accent); letter-spacing:.06em; font-weight:400; margin-bottom:.2em; }
@@ -150,14 +165,14 @@
   /* ── Autoscroll pill ── */
   #scroll-badge {
     position: fixed;
-    bottom: 1.5rem; right: 1.5rem;
+    bottom: 2.5rem; right: 2.5rem;
     font-family: 'DM Mono', monospace;
-    font-size: .7rem;
+    font-size: 1.4rem;
     color: var(--accent);
     background: rgba(232,200,66,.1);
     border: 1px solid rgba(232,200,66,.3);
     border-radius: 999px;
-    padding: .35em 1em;
+    padding: .6em 1.6em;
     opacity: 0;
     transform: translateY(6px);
     transition: opacity .3s, transform .3s;
@@ -186,7 +201,7 @@
   }
 
   #song-list-panel {
-    width: min(420px, 90vw);
+    width: min(640px, 90vw);
     background: var(--surface);
     border-left: 1px solid var(--border);
     display: flex;
@@ -195,27 +210,27 @@
   }
 
   #song-list-header {
-    padding: 1.4rem 1.6rem 1rem;
+    padding: 2.4rem 2.4rem 1.6rem;
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
   }
   #song-list-header h2 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.6rem;
+    font-size: 2.8rem;
     letter-spacing: .08em;
     color: var(--accent);
     font-weight: 400;
   }
   #song-search {
-    margin-top: .8rem;
+    margin-top: 1.2rem;
     width: 100%;
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: .5rem .8rem;
+    border-radius: 8px;
+    padding: 1rem 1.4rem;
     color: var(--text);
     font-family: 'DM Mono', monospace;
-    font-size: .8rem;
+    font-size: 1.6rem;
     outline: none;
   }
   #song-search:focus { border-color: var(--accent2); }
@@ -223,13 +238,13 @@
   #song-list-items {
     overflow-y: auto;
     flex: 1;
-    padding: .5rem 0;
+    padding: .8rem 0;
   }
   .song-item {
     display: flex;
     align-items: center;
-    gap: .8rem;
-    padding: .7rem 1.6rem;
+    gap: 1.4rem;
+    padding: 1.3rem 2.4rem;
     cursor: pointer;
     transition: background .15s;
     border-left: 3px solid transparent;
@@ -241,24 +256,24 @@
   }
   .song-item-num {
     font-family: 'DM Mono', monospace;
-    font-size: .65rem;
+    font-size: 1.2rem;
     color: var(--text-dim);
-    min-width: 2rem;
+    min-width: 3.2rem;
     text-align: right;
   }
   .song-item-title {
-    font-size: .9rem;
+    font-size: 1.7rem;
     color: var(--text);
     flex: 1;
   }
   .song-item-ext {
     font-family: 'DM Mono', monospace;
-    font-size: .6rem;
+    font-size: 1rem;
     color: var(--text-dim);
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: .1em .4em;
+    border-radius: 4px;
+    padding: .15em .55em;
   }
 
   /* ── Empty / loading states ── */
@@ -268,34 +283,35 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    gap: 1rem;
+    gap: 1.6rem;
     color: var(--text-dim);
   }
   #empty-state.visible { display: flex; }
   #empty-state .big-icon {
-    font-size: 5rem;
+    font-size: 9rem;
     opacity: .2;
   }
   #empty-state h2 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 2rem;
+    font-size: 3.5rem;
     font-weight: 400;
     letter-spacing: .06em;
     color: var(--text-mid);
   }
   #empty-state p {
-    font-size: .9rem;
+    font-size: 1.6rem;
     color: var(--text-dim);
     text-align: center;
-    max-width: 28rem;
+    max-width: 50rem;
+    line-height: 1.5;
   }
   #empty-state code {
     font-family: 'DM Mono', monospace;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 4px;
-    padding: .1em .4em;
-    font-size: .85em;
+    padding: .15em .5em;
+    font-size: .9em;
   }
 
   /* ── Help overlay ── */
@@ -316,53 +332,53 @@
   #help-box {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 2.5rem 3rem;
-    min-width: 28rem;
+    border-radius: 16px;
+    padding: 4rem 5rem;
+    min-width: 50rem;
   }
   #help-box h2 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 2rem;
+    font-size: 3.5rem;
     color: var(--accent);
     letter-spacing: .08em;
     font-weight: 400;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2.5rem;
   }
   .key-row {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: .7rem;
+    gap: 1.8rem;
+    margin-bottom: 1.4rem;
   }
   .key-row kbd {
     font-family: 'DM Mono', monospace;
-    font-size: .75rem;
+    font-size: 1.4rem;
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: .2em .6em;
+    border-radius: 7px;
+    padding: .4em 1em;
     color: var(--accent2);
-    min-width: 7rem;
+    min-width: 12rem;
     text-align: center;
     display: inline-block;
   }
   .key-row span {
-    font-size: .85rem;
+    font-size: 1.6rem;
     color: var(--text-mid);
   }
 
   /* ── Status toast ── */
   #toast {
     position: fixed;
-    bottom: 1.5rem;
+    bottom: 2.5rem;
     left: 50%;
     transform: translateX(-50%) translateY(20px);
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 999px;
-    padding: .5em 1.4em;
+    padding: .8em 2em;
     font-family: 'DM Mono', monospace;
-    font-size: .75rem;
+    font-size: 1.5rem;
     color: var(--text-mid);
     opacity: 0;
     transition: opacity .2s, transform .2s;
@@ -389,53 +405,6 @@
   .nav-arrow.right { right: .8rem; }
   body:hover .nav-arrow { opacity: .25; }
 
-  /* ── Brightness bar ── */
-  #brightness-bar {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(.94);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 1.4rem 2rem;
-    min-width: 18rem;
-    z-index: 600;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .2s, transform .2s;
-    text-align: center;
-  }
-  #brightness-bar.visible {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  #bb-label {
-    font-family: 'DM Mono', monospace;
-    font-size: .7rem;
-    letter-spacing: .12em;
-    color: var(--text-dim);
-    margin-bottom: .9rem;
-  }
-  #bb-track {
-    height: 6px;
-    background: var(--bg);
-    border-radius: 999px;
-    overflow: hidden;
-    margin-bottom: .7rem;
-  }
-  #bb-fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 999px;
-    transition: width .15s ease;
-  }
-  #bb-pct {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.8rem;
-    color: var(--accent);
-    letter-spacing: .06em;
-  }
 </style>
 </head>
 <body>
@@ -500,7 +469,6 @@
     <div class="key-row"><kbd>S</kbd><span>Toggle song list</span></div>
     <div class="key-row"><kbd>F</kbd><span>Toggle fullscreen</span></div>
     <div class="key-row"><kbd>R</kbd><span>Refresh song list (USB)</span></div>
-    <div class="key-row"><kbd>b / B</kbd><span>Screen brightness down / up</span></div>
     <div class="key-row"><kbd>O</kbd><span>Toggle portrait / landscape</span></div>
     <div class="key-row"><kbd>?</kbd><span>Toggle this help</span></div>
     <div class="key-row"><kbd>Esc</kbd><span>Close overlays</span></div>
@@ -540,6 +508,7 @@ const topbar       = document.getElementById('topbar');
 
 // ── Init ───────────────────────────────────────────────────────────────────
 async function init() {
+  applyPortrait();
   await loadSongList();
   if (songs.length > 0) loadSong(0);
 }
@@ -583,6 +552,10 @@ async function loadSong(id) {
   if (songs.length === 0) return;
   id = Math.max(0, Math.min(songs.length - 1, id));
   stopAutoScroll();
+
+  document.body.classList.add('song-fading');
+  await new Promise(r => setTimeout(r, 220));
+
   try {
     const r = await fetch(`/api/song/${id}`);
     const data = await r.json();
@@ -601,6 +574,8 @@ async function loadSong(id) {
     renderSongListItems(document.getElementById('song-search').value);
   } catch(e) {
     showToast('⚠ Error loading song');
+  } finally {
+    requestAnimationFrame(() => document.body.classList.remove('song-fading'));
   }
 }
 
@@ -817,61 +792,24 @@ document.addEventListener('keydown', (e) => {
         if (songs.length > 0 && currentId >= songs.length) loadSong(songs.length - 1);
       });
       break;
-    case 'b': changeBrightness('down'); break;
-    case 'B': changeBrightness('up');   break;
     case 'o': case 'O': rotateDisplay(); break;
     case '?':  toggleHelp(); break;
   }
 });
 
-// ── Display rotation ───────────────────────────────────────────────────────
-async function rotateDisplay() {
-  try {
-    const r = await fetch('/api/rotate', { method: 'POST' });
-    const data = await r.json();
-    if (data.error) {
-      showToast(`⚠ ${data.error}`, 3500);
-    } else {
-      showToast(`⟳ ${data.orientation === 'portrait' ? 'Portrait' : 'Landscape'}`);
-    }
-  } catch(e) {
-    showToast('⚠ Rotation unavailable');
-  }
+// ── Display rotation (CSS) ─────────────────────────────────────────────────
+let portrait = false;
+try { portrait = localStorage.getItem('lyric-portrait') === '1'; } catch(e) {}
+
+function applyPortrait() {
+  document.body.classList.toggle('portrait', portrait);
 }
 
-// ── Brightness ─────────────────────────────────────────────────────────────
-async function changeBrightness(direction) {
-  try {
-    const r = await fetch(`/api/brightness/${direction}`);
-    const data = await r.json();
-    if (data.error) {
-      showToast(`⚠ ${data.error}`, 3500);
-    } else {
-      showBrightnessBar(data.percent);
-    }
-  } catch(e) {
-    showToast('⚠ Brightness unavailable');
-  }
-}
-
-// Brightness overlay bar
-let brightnessBarTimer = null;
-function showBrightnessBar(pct) {
-  let bar = document.getElementById('brightness-bar');
-  if (!bar) {
-    bar = document.createElement('div');
-    bar.id = 'brightness-bar';
-    bar.innerHTML = `
-      <div id="bb-label">☀ BRIGHTNESS</div>
-      <div id="bb-track"><div id="bb-fill"></div></div>
-      <div id="bb-pct"></div>`;
-    document.body.appendChild(bar);
-  }
-  document.getElementById('bb-fill').style.width = pct + '%';
-  document.getElementById('bb-pct').textContent = pct + '%';
-  bar.classList.add('visible');
-  if (brightnessBarTimer) clearTimeout(brightnessBarTimer);
-  brightnessBarTimer = setTimeout(() => bar.classList.remove('visible'), 1800);
+function rotateDisplay() {
+  portrait = !portrait;
+  applyPortrait();
+  showToast(portrait ? '⟳ Portrait' : '⟳ Landscape');
+  try { localStorage.setItem('lyric-portrait', portrait ? '1' : '0'); } catch(e) {}
 }
 
 // ── Hide topbar in fullscreen ──────────────────────────────────────────────

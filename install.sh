@@ -141,19 +141,7 @@ EOF
 sudo udevadm control --reload-rules
 echo "   ✓ USB udev rule installed"
 
-# ── 7. Backlight permissions (permanent) ─────────────────────
-echo "▶ Making backlight brightness writable permanently..."
-sudo tee /etc/udev/rules.d/98-backlight.rules > /dev/null << 'EOF'
-# Allow all users to set screen brightness (for Lyric Prompter b/B keys)
-SUBSYSTEM=="backlight", ACTION=="add", RUN+="/bin/chmod a+w /sys%p/brightness"
-EOF
-sudo udevadm control --reload-rules
-for f in /sys/class/backlight/*/brightness; do
-  [ -f "$f" ] && sudo chmod a+w "$f" && echo "   ✓ Applied to $f"
-done
-echo "   ✓ Backlight udev rule installed (permanent across reboots)"
-
-# ── 8. Done ──────────────────────────────────────────────────
+# ── 7. Done ──────────────────────────────────────────────────
 echo ""
 echo "╔══════════════════════════════════════════════════════╗"
 echo "║  ✅  Installation complete!                          ║"

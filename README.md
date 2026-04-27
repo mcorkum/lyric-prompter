@@ -45,8 +45,7 @@ lyric-prompter/
 | `S` | Toggle song list sidebar |
 | `F` | Toggle fullscreen |
 | `R` | Force-refresh USB / song list |
-| `b` / `B` | Brightness down / up |
-| `O` | Toggle portrait / landscape |
+| `O` | Toggle portrait / landscape (CSS rotation) |
 | `?` | Show key reference |
 | `Esc` | Close overlays / stop scroll |
 
