@@ -38,16 +38,45 @@ echo ""
   echo "quit"
 } | bluetoothctl > /tmp/pedal-scan.txt 2>&1
 
-echo "▶ Devices found:"
-grep "^Device " /tmp/pedal-scan.txt | nl
+# Collect unique devices, mark likely pedals with a star
+PEDAL_PATTERNS="pedal|BT-[0-9]|page|turner|donner|footswitch|airturn|pageflip|shutter"
+mapfile -t DEVICES < <(grep "^Device " /tmp/pedal-scan.txt | sort -u)
+
+if [ ${#DEVICES[@]} -eq 0 ]; then
+  echo "   ⚠ No devices found. Make sure the pedal is in pairing mode and re-run." >&2
+  exit 1
+fi
+
+echo "▶ Devices found  ( ★ = looks like a foot pedal )"
+echo ""
+for i in "${!DEVICES[@]}"; do
+  LINE="${DEVICES[$i]#Device }"
+  if echo "$LINE" | grep -qiE "$PEDAL_PATTERNS"; then
+    printf "  %2d) ★  %s\n" "$((i+1))" "$LINE"
+  else
+    printf "  %2d)    %s\n" "$((i+1))" "$LINE"
+  fi
+done
 echo ""
 
-read -rp "Enter the MAC address of your pedal (e.g. AA:BB:CC:DD:EE:FF): " MAC
+read -rp "Pick a number (or paste a MAC directly): " PICK
+if [[ "$PICK" =~ ^[0-9]+$ ]]; then
+  IDX=$((PICK - 1))
+  if [ $IDX -lt 0 ] || [ $IDX -ge ${#DEVICES[@]} ]; then
+    echo "   ⚠ Invalid selection." >&2
+    exit 1
+  fi
+  MAC=$(awk '{print $2}' <<< "${DEVICES[$IDX]}")
+else
+  MAC="$PICK"
+fi
+
 if ! [[ "$MAC" =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ ]]; then
   echo "   ⚠ Invalid MAC address. Aborting." >&2
   exit 1
 fi
 MAC="${MAC^^}"   # uppercase for consistency
+echo "   ✓ Using $MAC"
 
 # ── 3. Pair, trust, connect ──────────────────────────────────
 echo "▶ Pairing, trusting, and connecting..."
