@@ -75,6 +75,7 @@ USB is also detected automatically — the song list updates within a few second
 | Scroll down 75%               | Skip ►► (media mode) |
 | Toggle auto-scroll            | Play/Pause tap       |
 | Ramp scroll speed up          | Play/Pause hold      |
+| Stop auto-scroll              | Stop (■)             |
 
 Run `setup-pedal.sh` to pair. See the README for DBM-20 mode reference.
 

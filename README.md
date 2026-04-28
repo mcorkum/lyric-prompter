@@ -170,12 +170,13 @@ The DBM-20 has 4 modes. Cycle modes by holding both foot pedals ~3 s, then tappi
 - Left pedal → jump to top of song
 - Right pedal → jump down 75% of screen
 
-**Mode: Media keys** (all five buttons live)
+**Mode: Media keys** (all buttons live)
 - Left pedal → jump to top of song
 - Right pedal → jump down 75%
 - Skip ◄◄ → scroll up 75%
 - Skip ►► → scroll down 75%
 - Play/Pause: **tap** → start/stop auto-scroll · **hold** → ramp scroll speed up while held
+- Stop (■) → stop auto-scroll
 
 All keyboard shortcuts keep working alongside the pedal in any mode. Decreasing speed is keyboard-only (`[`).
 

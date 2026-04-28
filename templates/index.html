@@ -111,7 +111,6 @@
     overflow-y: auto;
     overflow-x: hidden;
     height: 100%;
-    scroll-behavior: smooth;
     padding: 3rem 4vw 40vh;
   }
   /* hide scrollbar */
@@ -469,6 +468,7 @@
     <div class="key-row"><kbd>PgUp / PgDn</kbd><span>Top of song / jump down 75% (foot pedal)</span></div>
     <div class="key-row"><kbd>Skip ◄◄ / ►►</kbd><span>Scroll up / down 75% (foot pedal media mode)</span></div>
     <div class="key-row"><kbd>► / ❚❚</kbd><span>Tap: toggle auto-scroll · Hold: ramp speed up (foot pedal)</span></div>
+    <div class="key-row"><kbd>■</kbd><span>Stop auto-scroll (foot pedal)</span></div>
     <div class="key-row"><kbd>Home / End</kbd><span>Jump to top / bottom</span></div>
     <div class="key-row"><kbd>T / E</kbd><span>Jump to top / bottom (alternate)</span></div>
     <div class="key-row"><kbd>+ / =</kbd><span>Increase font size</span></div>
@@ -673,7 +673,7 @@ function startPlayPausePress() {
   playPauseHoldTimer = setTimeout(() => {
     playPauseHoldTimer = null;
     playPauseRampTimer = setInterval(() => {
-      scrollSpeed = Math.min(300, scrollSpeed + 2);
+      scrollSpeed = Math.min(300, scrollSpeed + 8);
       if (autoScroll) updateScrollBadge();
       showToast(`⏩ Speed: ${scrollSpeed} px/s`);
     }, 100);
@@ -815,6 +815,10 @@ document.addEventListener('keydown', (e) => {
     case 'MediaPlayPause':     // pedal media mode: tap = toggle, hold = ramp speed
       e.preventDefault();
       startPlayPausePress();
+      break;
+    case 'MediaStop':          // pedal media mode: stop button → stop auto-scroll
+      e.preventDefault();
+      stopAutoScroll();
       break;
     case 'Home':
     case 't': case 'T':
