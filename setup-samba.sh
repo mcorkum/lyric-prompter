@@ -1,8 +1,9 @@
 #!/bin/bash
 # ============================================================
 #  Lyric Prompter — Samba Songs Share (optional)
-#  Exposes ~/Songs/ as a network share so you can drag lyric
-#  files onto the Pi from any laptop on the same Wi-Fi.
+#  Exposes ~/Songs/ as a password-protected network share so
+#  you can drag lyric files onto the Pi from any laptop on
+#  the same Wi-Fi.
 #    bash setup-samba.sh
 # ============================================================
 set -e
@@ -27,16 +28,19 @@ echo "   ✓ Samba installed"
 mkdir -p "$SONGS_DIR"
 echo "   ✓ Share path: $SONGS_DIR"
 
-# ── 3. Back up smb.conf and write our share ──────────────────
+# ── 3. Back up or restore smb.conf (idempotent re-run) ───────
 if [ ! -f "${SMB_CONF}.lyric-bak" ]; then
   sudo cp "$SMB_CONF" "${SMB_CONF}.lyric-bak"
   echo "   ✓ Backed up original smb.conf to ${SMB_CONF}.lyric-bak"
+else
+  # Restore from backup so any previous [Songs] / guest config is wiped
+  sudo cp "${SMB_CONF}.lyric-bak" "$SMB_CONF"
+  echo "   ✓ Restored smb.conf from backup (clean slate)"
 fi
 
-# Add the share section if it isn't already there (idempotent)
-if ! sudo grep -q "^\[$SHARE_NAME\]" "$SMB_CONF"; then
-  echo "▶ Adding [$SHARE_NAME] share to smb.conf..."
-  sudo tee -a "$SMB_CONF" > /dev/null << EOF
+# ── 4. Append the password-protected share ───────────────────
+echo "▶ Adding [$SHARE_NAME] share to smb.conf..."
+sudo tee -a "$SMB_CONF" > /dev/null << EOF
 
 # ── Lyric Prompter share (added by setup-samba.sh) ──
 [$SHARE_NAME]
@@ -45,26 +49,24 @@ if ! sudo grep -q "^\[$SHARE_NAME\]" "$SMB_CONF"; then
    browseable = yes
    read only = no
    writable = yes
-   guest ok = yes
-   guest only = yes
+   valid users = $USER
    create mask = 0664
    directory mask = 0775
    force user = $USER
    force group = $USER
 EOF
-  echo "   ✓ Share section added"
-else
-  echo "   ✓ [$SHARE_NAME] share already present — leaving as-is"
-fi
+echo "   ✓ Share section added"
 
-# Make sure guest access is enabled in [global]
-if ! sudo grep -q "map to guest" "$SMB_CONF"; then
-  echo "▶ Enabling guest access in [global]..."
-  sudo sed -i '/^\[global\]/a    map to guest = bad user' "$SMB_CONF"
-  echo "   ✓ map to guest = bad user added"
-fi
+# ── 5. Set Samba password for the Pi user ────────────────────
+echo ""
+echo "▶ Setting Samba password for user '$USER'."
+echo "   You'll use this password (with username '$USER') when"
+echo "   Windows / macOS / Linux prompts you for credentials."
+echo ""
+sudo smbpasswd -a "$USER"
+sudo smbpasswd -e "$USER" > /dev/null
 
-# ── 4. Validate and restart Samba ────────────────────────────
+# ── 6. Validate and restart Samba ────────────────────────────
 echo "▶ Validating smb.conf..."
 sudo testparm -s "$SMB_CONF" > /dev/null
 echo "   ✓ Config OK"
@@ -75,7 +77,7 @@ sudo systemctl restart smbd
 sudo systemctl restart nmbd 2>/dev/null || true
 echo "   ✓ Samba running"
 
-# ── 5. Get IP and print connect info ─────────────────────────
+# ── 7. Get IP and print connect info ─────────────────────────
 IP=$(hostname -I | awk '{print $1}')
 HOST=$(hostname)
 
@@ -90,7 +92,12 @@ echo "║    macOS:    smb://$IP/$SHARE_NAME"
 echo "║              smb://$HOST.local/$SHARE_NAME"
 echo "║    Linux:    smb://$IP/$SHARE_NAME (in file manager)       ║"
 echo "║                                                            ║"
-echo "║  No password needed — guest access is enabled.             ║"
+echo "║  Username: $USER"
+echo "║  Password: (the one you just set)                          ║"
+echo "║                                                            ║"
+echo "║  Forgot the password? Reset it any time:                   ║"
+echo "║    sudo smbpasswd $USER"
+echo "║                                                            ║"
 echo "║  Drop .txt or .md files into the share; the prompter       ║"
 echo "║  picks them up automatically within ~6 seconds.            ║"
 echo "╚════════════════════════════════════════════════════════════╝"

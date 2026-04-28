@@ -134,9 +134,16 @@ Drop lyric files onto the Pi from any laptop on the same Wi-Fi — no USB stick 
 bash setup-samba.sh
 ```
 
-Installs Samba, exposes `~/Songs/` as a guest-writable share named **Songs**, and prints the connect URL for Mac, Windows, and Linux. Once mounted, drag `.txt` or `.md` files into the share — the prompter picks them up automatically within ~6 seconds (no manual refresh).
+Installs Samba, exposes `~/Songs/` as a password-protected share named **Songs**, and prints the connect URL for Windows, macOS, and Linux. The script will prompt you to set a Samba password for your Pi user during setup.
 
-Guest access is enabled by default for convenience on a private band setup. If you need password protection, edit `/etc/samba/smb.conf` to set `guest ok = no` for the `[Songs]` section and add a Samba user with `sudo smbpasswd -a <user>`.
+When connecting from another machine, enter your **Pi username** and the Samba password you just set. The prompter picks up new files automatically within ~6 seconds (no manual refresh).
+
+```bash
+# Forgot the Samba password? Reset it without re-running the whole setup:
+sudo smbpasswd <pi-username>
+```
+
+> Why password auth? Windows 10/11 disables anonymous guest SMB access by default for security, so a password-protected share works on every OS without client-side tweaks.
 
 ---
 
