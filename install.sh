@@ -116,7 +116,8 @@ AUTOSTART_LXDE="$HOME/.config/lxsession/LXDE-pi/autostart"
 # Wait for Flask to actually respond before launching Chromium.
 # Polls every 0.3s, gives up after 30s and launches anyway.
 WAIT_CMD='timeout 30 bash -c "until curl -fsS http://localhost:5000/ >/dev/null 2>&1; do sleep 0.3; done"'
-LAUNCH="$WAIT_CMD; $CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --no-first-run http://localhost:5000"
+CHROMIUM_FLAGS="--kiosk --noerrdialogs --disable-infobars --no-first-run --password-store=basic --no-default-browser-check --disable-features=TranslateUI"
+LAUNCH="$WAIT_CMD; $CHROMIUM_BIN $CHROMIUM_FLAGS http://localhost:5000"
 
 # Always (re)write the .desktop file — works across LXDE, Wayfire, and Bookworm
 mkdir -p "$HOME/.config/autostart"
