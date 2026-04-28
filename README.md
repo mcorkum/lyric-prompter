@@ -126,6 +126,20 @@ let scrollSpeed = 55;   // px/s — increase for faster, decrease for slower
 
 ---
 
+## Samba Network Share (optional)
+
+Drop lyric files onto the Pi from any laptop on the same Wi-Fi — no USB stick required.
+
+```bash
+bash setup-samba.sh
+```
+
+Installs Samba, exposes `~/Songs/` as a guest-writable share named **Songs**, and prints the connect URL for Mac, Windows, and Linux. Once mounted, drag `.txt` or `.md` files into the share — the prompter picks them up automatically within ~6 seconds (no manual refresh).
+
+Guest access is enabled by default for convenience on a private band setup. If you need password protection, edit `/etc/samba/smb.conf` to set `guest ok = no` for the `[Songs]` section and add a Samba user with `sudo smbpasswd -a <user>`.
+
+---
+
 ## Bluetooth Foot Pedal (optional)
 
 Hands-free page control via a Donner BT pedal (or any HID page-turner that sends Page Up / Page Down).
