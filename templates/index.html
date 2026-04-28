@@ -468,7 +468,7 @@
     <div class="key-row"><kbd>PgUp / PgDn</kbd><span>Top of song / jump down 75% (foot pedal)</span></div>
     <div class="key-row"><kbd>Skip ◄◄ / ►►</kbd><span>Scroll up / down 75% (foot pedal media mode)</span></div>
     <div class="key-row"><kbd>► / ❚❚</kbd><span>Tap: toggle auto-scroll · Hold: ramp speed up (foot pedal)</span></div>
-    <div class="key-row"><kbd>■</kbd><span>Stop auto-scroll (foot pedal)</span></div>
+    <div class="key-row"><kbd>■</kbd><span>Tap: stop auto-scroll · Hold: ramp speed down (foot pedal)</span></div>
     <div class="key-row"><kbd>Home / End</kbd><span>Jump to top / bottom</span></div>
     <div class="key-row"><kbd>T / E</kbd><span>Jump to top / bottom (alternate)</span></div>
     <div class="key-row"><kbd>+ / =</kbd><span>Increase font size</span></div>
@@ -697,6 +697,41 @@ function endPlayPausePress() {
   }
 }
 
+// ── Pedal Stop: tap stops auto-scroll, hold ramps speed down ───────────────
+let stopDownAt    = 0;
+let stopHoldTimer = null;
+let stopRampTimer = null;
+
+function startStopPress() {
+  if (stopDownAt) return;
+  stopDownAt = Date.now();
+  stopHoldTimer = setTimeout(() => {
+    stopHoldTimer = null;
+    stopRampTimer = setInterval(() => {
+      scrollSpeed = Math.max(2, scrollSpeed - 8);
+      if (autoScroll) updateScrollBadge();
+      showToast(`⏩ Speed: ${scrollSpeed} px/s`);
+    }, 100);
+  }, 500);
+}
+
+function endStopPress() {
+  if (!stopDownAt) return;
+  stopDownAt = 0;
+  if (stopHoldTimer) {
+    // Released before 500ms — tap → stop auto-scroll
+    clearTimeout(stopHoldTimer);
+    stopHoldTimer = null;
+    stopAutoScroll();
+  }
+  if (stopRampTimer) {
+    // Was holding — stop ramp, persist new speed
+    clearInterval(stopRampTimer);
+    stopRampTimer = null;
+    saveScrollSpeed();
+  }
+}
+
 function startAutoScroll() {
   autoScroll = true;
   lastTime = null;
@@ -816,9 +851,9 @@ document.addEventListener('keydown', (e) => {
       e.preventDefault();
       startPlayPausePress();
       break;
-    case 'MediaStop':          // pedal media mode: stop button → stop auto-scroll
+    case 'MediaStop':          // pedal media mode: tap = stop, hold = ramp speed down
       e.preventDefault();
-      stopAutoScroll();
+      startStopPress();
       break;
     case 'Home':
     case 't': case 'T':
@@ -871,12 +906,10 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// ── Pedal Play/Pause: tap vs hold ──────────────────────────────────────────
+// ── Pedal Play/Pause + Stop: tap vs hold ───────────────────────────────────
 document.addEventListener('keyup', (e) => {
-  if (e.key === 'MediaPlayPause') {
-    e.preventDefault();
-    endPlayPausePress();
-  }
+  if (e.key === 'MediaPlayPause') { e.preventDefault(); endPlayPausePress(); }
+  if (e.key === 'MediaStop')      { e.preventDefault(); endStopPress(); }
 });
 
 
