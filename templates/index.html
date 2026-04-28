@@ -485,6 +485,10 @@ let rawExt       = '';
 let fontSizes = {};
 try { fontSizes = JSON.parse(localStorage.getItem('lyric-font-sizes') || '{}'); } catch(e) {}
 
+// Scroll speed memory keyed by song title, persisted in localStorage
+let scrollSpeeds = {};
+try { scrollSpeeds = JSON.parse(localStorage.getItem('lyric-scroll-speeds') || '{}'); } catch(e) {}
+
 // ── DOM refs ───────────────────────────────────────────────────────────────
 const lyricScroll  = document.getElementById('lyric-scroll');
 const lyricContent = document.getElementById('lyric-content');
@@ -558,6 +562,10 @@ async function loadSong(id) {
       fontSize = fontSizes[data.title];
       lyricContent.style.fontSize = fontSize + 'rem';
     }
+    // Restore saved scroll speed for this song (silently)
+    if (scrollSpeeds[data.title] !== undefined) {
+      scrollSpeed = scrollSpeeds[data.title];
+    }
     updateProgress();
     renderSongListItems(document.getElementById('song-search').value);
   } catch(e) {
@@ -626,6 +634,12 @@ function toggleAutoScroll() {
 
 function updateScrollBadge() {
   scrollBadge.textContent = `⏩ AUTO-SCROLL  ${scrollSpeed}px/s`;
+}
+
+function saveScrollSpeed() {
+  if (!songs[currentId]) return;
+  scrollSpeeds[songs[currentId].title] = scrollSpeed;
+  try { localStorage.setItem('lyric-scroll-speeds', JSON.stringify(scrollSpeeds)); } catch(e) {}
 }
 
 function startAutoScroll() {
@@ -764,12 +778,14 @@ document.addEventListener('keydown', (e) => {
       scrollSpeed = Math.max(2, scrollSpeed - 2);
       if (autoScroll) updateScrollBadge();
       showToast(`⏩ Speed: ${scrollSpeed} px/s`);
+      saveScrollSpeed();
       break;
     case ']':
       e.preventDefault();
       scrollSpeed = Math.min(300, scrollSpeed + 2);
       if (autoScroll) updateScrollBadge();
       showToast(`⏩ Speed: ${scrollSpeed} px/s`);
+      saveScrollSpeed();
       break;
 
     case 's': case 'S': toggleSongList();  break;
