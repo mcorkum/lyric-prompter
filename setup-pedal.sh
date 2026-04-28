@@ -3,6 +3,10 @@
 #  Lyric Prompter — Bluetooth Foot Pedal Setup
 #  Optional. Run only if you have a BT page-turner pedal.
 #    bash setup-pedal.sh
+#
+#  Safe to re-run any time — re-pairs the pedal and rewrites
+#  the auto-reconnect service. Use it to fix a stuck pedal
+#  or to swap to a different pedal.
 # ============================================================
 set -e
 
@@ -61,6 +65,17 @@ echo "$MAC" > "$HOME/.lyric-prompter-pedal"
 echo "   ✓ Saved MAC to ~/.lyric-prompter-pedal"
 
 # ── 4. Auto-reconnect systemd unit ───────────────────────────
+HELPER="$HOME/lyric-prompter/pedal-connect.sh"
+if [ ! -x "$HELPER" ]; then
+  if [ -f "$HELPER" ]; then
+    chmod +x "$HELPER"
+  else
+    echo "   ⚠ Helper script not found at $HELPER" >&2
+    echo "     Re-run install.sh first, then re-run this script." >&2
+    exit 1
+  fi
+fi
+
 SERVICE=/etc/systemd/system/pedal-connect.service
 echo "▶ Installing auto-reconnect service..."
 sudo tee "$SERVICE" > /dev/null << EOF
@@ -72,7 +87,8 @@ Requires=bluetooth.service
 [Service]
 Type=oneshot
 User=$USER
-ExecStart=/bin/bash -c 'sleep 5 && echo "connect $MAC" | bluetoothctl'
+Environment=HOME=$HOME
+ExecStart=/bin/bash $HELPER
 RemainAfterExit=yes
 
 [Install]
@@ -81,7 +97,7 @@ EOF
 
 sudo systemctl daemon-reload
 sudo systemctl enable pedal-connect.service
-sudo systemctl start pedal-connect.service || true
+sudo systemctl restart pedal-connect.service || true
 echo "   ✓ pedal-connect.service installed and enabled"
 
 # ── 5. Done ──────────────────────────────────────────────────

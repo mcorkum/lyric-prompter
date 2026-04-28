@@ -5,6 +5,11 @@
 #  you can drag lyric files onto the Pi from any laptop on
 #  the same Wi-Fi.
 #    bash setup-samba.sh
+#
+#  Safe to re-run any time — restores the original smb.conf
+#  from backup, rewrites the [Songs] section, and resets the
+#  Samba password. Use it to fix a broken share or change
+#  the password.
 # ============================================================
 set -e
 

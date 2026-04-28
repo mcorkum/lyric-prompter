@@ -11,7 +11,12 @@ A fullscreen teleprompter for live performance lyrics. Reads `.txt` and `.md` fi
 bash install.sh
 ```
 
-Reboot and Chromium opens automatically in fullscreen kiosk mode.
+Reboot and Chromium opens automatically in fullscreen kiosk mode. Chromium waits for the Flask server to actually respond before launching — typically <2s after login.
+
+> **All setup scripts are safe to re-run any time** to fix issues:
+> - `bash install.sh` — repairs the main app, services, and autostart
+> - `bash setup-samba.sh` — resets the Samba share and password
+> - `bash setup-pedal.sh` — re-pairs the Bluetooth pedal and rewrites the auto-reconnect service
 
 ---
 

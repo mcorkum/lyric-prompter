@@ -2,6 +2,9 @@
 # ============================================================
 #  Lyric Prompter — Raspberry Pi 5 Setup Script
 #  Run as your normal pi user (NOT root):  bash install.sh
+#
+#  Safe to re-run any time — it will repair the install,
+#  update files, and restart services without losing state.
 # ============================================================
 set -e
 
@@ -18,7 +21,7 @@ echo ""
 echo "▶ Installing system dependencies..."
 sudo apt-get update -qq
 # Bookworm uses 'chromium', Bullseye uses 'chromium-browser'
-sudo apt-get install -y python3-pip python3-flask unclutter
+sudo apt-get install -y python3-pip python3-flask unclutter curl
 sudo apt-get install -y chromium 2>/dev/null || sudo apt-get install -y chromium-browser
 
 # Detect which binary is available
@@ -110,23 +113,29 @@ echo "▶ Setting up Chromium kiosk autostart..."
 
 AUTOSTART_LXDE="$HOME/.config/lxsession/LXDE-pi/autostart"
 
-# Always write a .desktop file — works across LXDE, Wayfire, and Bookworm
+# Wait for Flask to actually respond before launching Chromium.
+# Polls every 0.3s, gives up after 30s and launches anyway.
+WAIT_CMD='timeout 30 bash -c "until curl -fsS http://localhost:5000/ >/dev/null 2>&1; do sleep 0.3; done"'
+LAUNCH="$WAIT_CMD; $CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --no-first-run http://localhost:5000"
+
+# Always (re)write the .desktop file — works across LXDE, Wayfire, and Bookworm
 mkdir -p "$HOME/.config/autostart"
 cat > "$HOME/.config/autostart/lyric-prompter.desktop" << EOF
 [Desktop Entry]
 Type=Application
 Name=Lyric Prompter
-Exec=bash -c 'sleep 8 && $CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --no-first-run http://localhost:5000'
+Exec=bash -c '$LAUNCH'
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
 EOF
 echo "   ✓ Created .desktop autostart entry"
 
-# Also write LXDE autostart as a fallback
+# Also write LXDE autostart as a fallback. Strip any old line first so re-runs upgrade cleanly.
 mkdir -p "$(dirname $AUTOSTART_LXDE)"
-grep -q "localhost:5000" "$AUTOSTART_LXDE" 2>/dev/null || \
-  echo "@bash -c \"sleep 8 && $CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --no-first-run http://localhost:5000\"" >> "$AUTOSTART_LXDE"
+touch "$AUTOSTART_LXDE"
+sed -i '/localhost:5000/d' "$AUTOSTART_LXDE"
+echo "@bash -c '$LAUNCH'" >> "$AUTOSTART_LXDE"
 grep -q "unclutter" "$AUTOSTART_LXDE" 2>/dev/null || \
   echo "@unclutter -idle 0.5 -root" >> "$AUTOSTART_LXDE"
 echo "   ✓ Added LXDE autostart entry (fallback)"
