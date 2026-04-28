@@ -65,14 +65,18 @@ USB is also detected automatically — the song list updates within a few second
 
 ---
 
-## Foot pedal (optional)
+## Foot pedal — Donner DBM-20 (optional)
 
-| Action            | Pedal              |
-|-------------------|--------------------|
-| Jump to top       | Left pedal         |
-| Jump down 75%     | Right pedal        |
+| Action                        | Pedal button         |
+|-------------------------------|----------------------|
+| Jump to top of song           | Left pedal           |
+| Jump down 75%                 | Right pedal          |
+| Scroll up 75%                 | Skip ◄◄ (media mode) |
+| Scroll down 75%               | Skip ►► (media mode) |
+| Toggle auto-scroll            | Play/Pause tap       |
+| Ramp scroll speed up          | Play/Pause hold      |
 
-Pedal must be set to Page Up / Page Down mode. Run `setup-pedal.sh` to pair.
+Run `setup-pedal.sh` to pair. See the README for DBM-20 mode reference.
 
 ---
 

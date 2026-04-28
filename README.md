@@ -152,21 +152,42 @@ sudo smbpasswd <pi-username>
 
 ---
 
-## Bluetooth Foot Pedal (optional)
+## Bluetooth Foot Pedal — Donner DBM-20 (optional)
 
-Hands-free page control via a Donner BT pedal (or any HID page-turner that sends Page Up / Page Down).
+Hands-free control via the Donner DBM-20 BT page-turner.
 
 ```bash
 bash setup-pedal.sh
 ```
 
-Walks you through pairing and installs an auto-reconnect service so the pedal comes up on every boot. Set the pedal to **Page Up / Page Down** mode (button combo on the pedal — see the manufacturer's slip).
+Walks you through pairing and installs an auto-reconnect service so the pedal comes back on every boot.
 
-Once paired:
-- **Left pedal** → jump to top of song
-- **Right pedal** → jump down 75% of screen (same as `Space`)
+### DBM-20 Modes
 
-All keyboard controls keep working alongside the pedal.
+The DBM-20 has 4 modes. Cycle modes by holding both foot pedals ~3 s, then tapping. Two of them work with the prompter:
+
+**Mode: Page Up / Page Down** (simple, just the foot pedals)
+- Left pedal → jump to top of song
+- Right pedal → jump down 75% of screen
+
+**Mode: Media keys** (all five buttons live)
+- Left pedal → jump to top of song
+- Right pedal → jump down 75%
+- Skip ◄◄ → scroll up 75%
+- Skip ►► → scroll down 75%
+- Play/Pause: **tap** → start/stop auto-scroll · **hold** → ramp scroll speed up while held
+
+All keyboard shortcuts keep working alongside the pedal in any mode. Decreasing speed is keyboard-only (`[`).
+
+### Troubleshooting the pedal
+
+If a button does nothing in either mode, the pedal may be sending an unrecognised key code. Open Chromium devtools (`F12`) → Console, then run:
+
+```js
+document.addEventListener('keydown', e => console.log('key:', e.key));
+```
+
+Press the pedal button and read the logged key name. Send that name and we can map it.
 
 ---
 

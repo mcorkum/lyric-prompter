@@ -467,6 +467,8 @@
     <div class="key-row"><kbd>← / →</kbd><span>Previous / Next song</span></div>
     <div class="key-row"><kbd>↑ / ↓</kbd><span>Scroll up / down</span></div>
     <div class="key-row"><kbd>PgUp / PgDn</kbd><span>Top of song / jump down 75% (foot pedal)</span></div>
+    <div class="key-row"><kbd>Skip ◄◄ / ►►</kbd><span>Scroll up / down 75% (foot pedal media mode)</span></div>
+    <div class="key-row"><kbd>► / ❚❚</kbd><span>Tap: toggle auto-scroll · Hold: ramp speed up (foot pedal)</span></div>
     <div class="key-row"><kbd>Home / End</kbd><span>Jump to top / bottom</span></div>
     <div class="key-row"><kbd>T / E</kbd><span>Jump to top / bottom (alternate)</span></div>
     <div class="key-row"><kbd>+ / =</kbd><span>Increase font size</span></div>
@@ -660,6 +662,41 @@ function saveScrollSpeed() {
   try { localStorage.setItem('lyric-scroll-speeds', JSON.stringify(scrollSpeeds)); } catch(e) {}
 }
 
+// ── Pedal Play/Pause: tap toggles auto-scroll, hold ramps speed up ─────────
+let playPauseDownAt    = 0;
+let playPauseHoldTimer = null;
+let playPauseRampTimer = null;
+
+function startPlayPausePress() {
+  if (playPauseDownAt) return; // already pressed; ignore stray repeat
+  playPauseDownAt = Date.now();
+  playPauseHoldTimer = setTimeout(() => {
+    playPauseHoldTimer = null;
+    playPauseRampTimer = setInterval(() => {
+      scrollSpeed = Math.min(300, scrollSpeed + 2);
+      if (autoScroll) updateScrollBadge();
+      showToast(`⏩ Speed: ${scrollSpeed} px/s`);
+    }, 100);
+  }, 500);
+}
+
+function endPlayPausePress() {
+  if (!playPauseDownAt) return;
+  playPauseDownAt = 0;
+  if (playPauseHoldTimer) {
+    // Released before 500ms — it was a tap → toggle auto-scroll
+    clearTimeout(playPauseHoldTimer);
+    playPauseHoldTimer = null;
+    toggleAutoScroll();
+  }
+  if (playPauseRampTimer) {
+    // Was holding — stop ramp and persist new speed
+    clearInterval(playPauseRampTimer);
+    playPauseRampTimer = null;
+    saveScrollSpeed();
+  }
+}
+
 function startAutoScroll() {
   autoScroll = true;
   lastTime = null;
@@ -767,6 +804,18 @@ document.addEventListener('keydown', (e) => {
       e.preventDefault();
       lyricScroll.scrollBy({ top: lyricScroll.clientHeight * 0.75, behavior: 'smooth' });
       break;
+    case 'MediaTrackPrevious': // pedal media mode: skip-up → scroll up 75%
+      e.preventDefault();
+      lyricScroll.scrollBy({ top: -lyricScroll.clientHeight * 0.75, behavior: 'smooth' });
+      break;
+    case 'MediaTrackNext':     // pedal media mode: skip-down → scroll down 75%
+      e.preventDefault();
+      lyricScroll.scrollBy({ top:  lyricScroll.clientHeight * 0.75, behavior: 'smooth' });
+      break;
+    case 'MediaPlayPause':     // pedal media mode: tap = toggle, hold = ramp speed
+      e.preventDefault();
+      startPlayPausePress();
+      break;
     case 'Home':
     case 't': case 'T':
       e.preventDefault();
@@ -815,6 +864,14 @@ document.addEventListener('keydown', (e) => {
       });
       break;
     case '?':  toggleHelp(); break;
+  }
+});
+
+// ── Pedal Play/Pause: tap vs hold ──────────────────────────────────────────
+document.addEventListener('keyup', (e) => {
+  if (e.key === 'MediaPlayPause') {
+    e.preventDefault();
+    endPlayPausePress();
   }
 });
 
