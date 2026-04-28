@@ -206,7 +206,7 @@
   }
 
   #song-list-panel {
-    width: min(980px, 95vw);
+    width: min(1120px, 95vw);
     background: var(--surface);
     border-left: 1px solid var(--border);
     display: flex;
@@ -215,27 +215,27 @@
   }
 
   #song-list-header {
-    padding: 3.6rem 3.6rem 2.4rem;
+    padding: 4.2rem 4rem 2.8rem;
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
   }
   #song-list-header h2 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 4.2rem;
+    font-size: 5rem;
     letter-spacing: .08em;
     color: var(--accent);
     font-weight: 400;
   }
   #song-search {
-    margin-top: 2rem;
+    margin-top: 2.2rem;
     width: 100%;
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1.6rem 2rem;
+    border-radius: 12px;
+    padding: 2rem 2.4rem;
     color: var(--text);
     font-family: 'DM Mono', monospace;
-    font-size: 2.5rem;
+    font-size: 3rem;
     outline: none;
   }
   #song-search:focus { border-color: var(--accent2); }
@@ -243,16 +243,16 @@
   #song-list-items {
     overflow-y: auto;
     flex: 1;
-    padding: 1.2rem 0;
+    padding: 1.4rem 0;
   }
   .song-item {
     display: flex;
     align-items: center;
-    gap: 2rem;
-    padding: 2.2rem 3.6rem;
+    gap: 2.2rem;
+    padding: 2.6rem 4rem;
     cursor: pointer;
     transition: background .15s;
-    border-left: 4px solid transparent;
+    border-left: 5px solid transparent;
   }
   .song-item:hover { background: rgba(255,255,255,.04); }
   .song-item.active {
@@ -261,24 +261,24 @@
   }
   .song-item-num {
     font-family: 'DM Mono', monospace;
-    font-size: 1.8rem;
+    font-size: 2.1rem;
     color: var(--text-dim);
-    min-width: 4.5rem;
+    min-width: 5rem;
     text-align: right;
   }
   .song-item-title {
-    font-size: 2.6rem;
+    font-size: 3rem;
     color: var(--text);
     flex: 1;
   }
   .song-item-ext {
     font-family: 'DM Mono', monospace;
-    font-size: 1.5rem;
+    font-size: 1.7rem;
     color: var(--text-dim);
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: .25em .65em;
+    border-radius: 6px;
+    padding: .25em .7em;
   }
 
   /* ── Empty / loading states ── */
@@ -337,40 +337,40 @@
   #help-box {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 6rem 7rem;
-    min-width: 80rem;
-    max-height: 94vh;
+    border-radius: 18px;
+    padding: 4.5rem 5.5rem;
+    min-width: 68rem;
+    max-height: 92vh;
     overflow-y: auto;
   }
   #help-box h2 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 5.4rem;
+    font-size: 4.2rem;
     color: var(--accent);
     letter-spacing: .08em;
     font-weight: 400;
-    margin-bottom: 3.6rem;
+    margin-bottom: 2.6rem;
   }
   .key-row {
     display: flex;
     align-items: center;
-    gap: 2.8rem;
-    margin-bottom: 2.4rem;
+    gap: 2.2rem;
+    margin-bottom: 1.8rem;
   }
   .key-row kbd {
     font-family: 'DM Mono', monospace;
-    font-size: 2.3rem;
+    font-size: 1.9rem;
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 9px;
-    padding: .5em 1.2em;
+    border-radius: 8px;
+    padding: .45em 1.1em;
     color: var(--accent2);
-    min-width: 19rem;
+    min-width: 16rem;
     text-align: center;
     display: inline-block;
   }
   .key-row span {
-    font-size: 2.5rem;
+    font-size: 2.1rem;
     color: var(--text-mid);
   }
 
