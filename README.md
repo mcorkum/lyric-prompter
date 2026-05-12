@@ -201,3 +201,106 @@ Press the pedal button and read the logged key name. Send that name and we can m
 | Cursor visible | `sudo apt install unclutter` and add `@unclutter -idle 0.5 -root` to LXDE autostart |
 | Kiosk doesn't launch | Check `systemctl status lyric-prompter` and the autostart file |
 | USB not detected | Run `lsblk` — Pi OS mounts USB under `/media/<username>/<label>` |
+
+
+
+
+# Raspberry Pi Display Rotation (Wayland / Kiosk Mode)
+
+This setup rotates the display on newer Raspberry Pi OS installations using Wayland (`wlr-randr`).
+
+## Problem
+
+Traditional methods such as:
+
+```bash
+display_rotate=1
+```
+
+in `/boot/firmware/config.txt` may not work on modern Raspberry Pi OS versions using KMS + Wayland.
+
+In kiosk mode, the compositor can override framebuffer rotation settings.
+
+## Working Solution
+
+The following command successfully rotates the display 90 degrees clockwise:
+
+```bash
+XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-0 wlr-randr --output HDMI-A-1 --transform 90
+```
+
+## Verify Display Output
+
+List displays and current transform state:
+
+```bash
+XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-0 wlr-randr
+```
+
+Example output:
+
+```txt
+HDMI-A-1
+Transform: normal
+```
+
+## Rotation Values
+
+| Rotation       | Value  |
+| -------------- | ------ |
+| Normal         | normal |
+| 90° clockwise  | 90     |
+| 180°           | 180    |
+| 270° clockwise | 270    |
+
+Example:
+
+```bash
+XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-0 wlr-randr --output HDMI-A-1 --transform 270
+```
+
+## Make Rotation Persistent
+
+Create autostart directory:
+
+```bash
+mkdir -p ~/.config/autostart
+```
+
+Create autostart file:
+
+```bash
+nano ~/.config/autostart/rotate-display.desktop
+```
+
+Contents:
+
+```ini
+[Desktop Entry]
+Type=Application
+Name=Rotate Display
+Exec=sh -c 'sleep 3; XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-0 wlr-randr --output HDMI-A-1 --transform 90'
+```
+
+## Notes
+
+* Increase the sleep value if kiosk mode starts before rotation applies.
+* Example:
+
+```ini
+Exec=sh -c 'sleep 10; ...'
+```
+
+* Install `wlr-randr` if missing:
+
+```bash
+sudo apt update
+sudo apt install wlr-randr
+```
+
+## Reboot
+
+```bash
+sudo reboot
+```
+
